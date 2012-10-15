@@ -8,7 +8,6 @@ import socket
 import json
 from PyQt4 import QtGui, QtCore
 
-#test
 showHints = False 
 board = []
 for i in range(8):
