@@ -76,7 +76,7 @@ class clientThread(QtCore.QThread):
 
 	def send(self, x, y):
 		makeMove(board, playerTile, x, y)		
-		self.client.sendxy(x, y)
+		self.client.makePlayerMove(x, y)
 
 def __init__():
 	super(Reversi, self).__init__()
