@@ -1,5 +1,5 @@
 #!/opt/local/bin/python
-#reversi-server
+#reversi-servers
 from __future__ import print_function
 import asyncore
 import socket
