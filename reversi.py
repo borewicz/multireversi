@@ -241,12 +241,6 @@ def makeMove(board, tile, xstart, ystart):
 
 	return True
 
-def makeComputerMove(board, computerTile):
-	x, y = getComputerMove(board, computerTile)
-	makeMove(board, computerTile, x, y)
-	showPoints(board, playerTile)	
-	switchHints(board)
-
 def getBoardCopy(board):
 	dupeBoard = getNewBoard()
 
@@ -314,15 +308,15 @@ def main():
 			grid.addWidget(new[j], i, j)
 		buttonGrid.append(new)
 	
-	computerButton = QtGui.QPushButton('Computer Move')
-	horizontialLayout = QtGui.QHBoxLayout()
+	#computerButton = QtGui.QPushButton('Computer Move')
+	#horizontialLayout = QtGui.QHBoxLayout()
 	resetButton = QtGui.QPushButton('Reset Board')
-	horizontialLayout.addWidget(computerButton)	
+	#horizontialLayout.addWidget(computerButton)	
 	horizontialLayout.addWidget(resetButton)
 	QtCore.QObject.connect(resetButton, QtCore.SIGNAL("clicked()"), 
 		lambda: resetBoard(board))
-	QtCore.QObject.connect(computerButton, QtCore.SIGNAL("clicked()"),
-		lambda: makeComputerMove(board, computerTile))
+	#QtCore.QObject.connect(computerButton, QtCore.SIGNAL("clicked()"),
+		#lambda: makeComputerMove(board, computerTile))
 	
 	horizontialBoxLayout = QtGui.QHBoxLayout()
 	verticalBoxLayout = QtGui.QVBoxLayout()
