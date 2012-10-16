@@ -1,4 +1,5 @@
 #!/opt/local/bin/python
+#reversi-server
 from __future__ import print_function
 import asyncore
 import socket
