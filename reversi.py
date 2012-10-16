@@ -60,7 +60,7 @@ class asyncClient(asyncore.dispatcher):
 		##to anuluje dalsze wysylanie w loopie
 		#self.buffer = self.buffer[sent:] 
 
-	def makePlayerMove(self, x, y):
+	def sendMove(self, x, y):
 		self.board = board
 		self.buffer = json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4)
 		sent = self.send(self.buffer)
@@ -74,19 +74,12 @@ class clientThread(QtCore.QThread):
 	def run(self):
 		asyncore.loop()
 
-	def send(self, x, y):
+	def sendMove(self, x, y):
 		makeMove(board, playerTile, x, y)		
-		self.client.makePlayerMove(x, y)
+		self.client.sendMove(x, y)
 
 def __init__():
 	super(Reversi, self).__init__()
-
-def switchHints(board):
-	if showHints:
-		validMovesBoard = getBoardWithValidMoves(board, playerTile)
-		convertBoard(validMovesBoard)
-	else:
-		convertBoard(board)
 
 def convertBoard(board):
 	for x in range(8):
@@ -95,14 +88,6 @@ def convertBoard(board):
 				buttonGrid[x][y].setText(board[x][y])
 			except:
 				pass	
-
-
-def makePlayerMove(board, playerTile, i, j, computerTile):
-	thread.send(i, j)
-	#convertBoard(board2)
-	#showPoints(board2, playerTile)
-	#makeComputerMove(board, computerTile)
-			
 
 def getNewBoard():
 	# Creates a brand new, blank board data structure.
@@ -123,7 +108,8 @@ def resetBoard(board):
 	board[3][4] = 'O'
 	board[4][3] = 'O'
 	board[4][4] = 'X'
-	switchHints(board)
+	#switchHints(board)
+	convertBoard(board)
 
 def isValidMove(board, tile, xstart, ystart):
 	# Returns False if the player's move on space xstart, ystart is invalid.
@@ -175,16 +161,6 @@ def isOnBoard(x, y):
 	# Returns True if the coordinates are located on the board.
 	return x >= 0 and x <= 7 and y >= 0 and y <=7
 
-
-def getBoardWithValidMoves(board, tile):
-	# Returns a new board with . marking the valid moves the given player can make.
-	dupeBoard = getBoardCopy(board)
-
-	for x, y in getValidMoves(dupeBoard, tile):
-		dupeBoard[x][y] = '.'
-	return dupeBoard
-
-
 def getValidMoves(board, tile):
 	# Returns a list of [x,y] lists of valid moves for the given player on the given board.
 	validMoves = []
@@ -209,24 +185,11 @@ def getScoreOfBoard(board):
 	return {'X':xscore, 'O':oscore}
 
 def enterPlayerTile():
-	#tile = ''
-	#while not (tile == 'X' or tile == 'O'):
-		#print('Do you want to be X or O?')
-		#tile = raw_input().upper()
-
 	# the first element in the tuple is the player's tile, the second is the computer's tile.
 	#if tile == 'X':
 		return ['X', 'O']
 	#else:
 		#return ['O', 'X']
-
-def whoGoesFirst():
-	# Randomly choose the player who goes first.
-	if random.randint(0, 1) == 0:
-		return 'computer'
-	else:
-		return 'player'
-
 
 def makeMove(board, tile, xstart, ystart):
 	tilesToFlip = isValidMove(board, tile, xstart, ystart)
@@ -241,39 +204,10 @@ def makeMove(board, tile, xstart, ystart):
 
 	return True
 
-def getBoardCopy(board):
-	dupeBoard = getNewBoard()
-
-	for x in range(8):
-		for y in range(8):
-			dupeBoard[x][y] = board[x][y]
-
-	return dupeBoard
-
-
 def isOnCorner(x, y):
 	# Returns True if the position is in one of the four corners.
 	return (x == 0 and y == 0) or (x == 7 and y == 0) or (x == 0 and y == 7) or (x == 7 and y == 7)	
 
-def getComputerMove(board, computerTile):
-	possibleMoves = getValidMoves(board, computerTile)
-
-	random.shuffle(possibleMoves)
-
-	for x, y in possibleMoves:
-		if isOnCorner(x, y):
-			return [x, y]
-
-	bestScore = -1
-	for x, y in possibleMoves:
-		dupeBoard = getBoardCopy(board)
-		makeMove(dupeBoard, computerTile, x, y)
-		score = getScoreOfBoard(dupeBoard)[computerTile]
-		if score > bestScore:
-			bestMove = [x, y]
-			bestScore = score
-	return bestMove
-		
 def showPoints(board, tile):
 	scores = getScoreOfBoard(board)
 	if tile == 'X':
@@ -303,13 +237,13 @@ def main():
 			button.setMinimumWidth(40)
 			button.setMaximumWidth(40)
 			QtCore.QObject.connect(button, QtCore.SIGNAL("clicked()"), 
-				lambda i=i, j=j: makePlayerMove(board, playerTile, i, j, computerTile))
+				lambda i=i, j=j: thread.sendMove(i, j))
 			new.append(button)
 			grid.addWidget(new[j], i, j)
 		buttonGrid.append(new)
 	
 	#computerButton = QtGui.QPushButton('Computer Move')
-	#horizontialLayout = QtGui.QHBoxLayout()
+	horizontialLayout = QtGui.QHBoxLayout()
 	resetButton = QtGui.QPushButton('Reset Board')
 	#horizontialLayout.addWidget(computerButton)	
 	horizontialLayout.addWidget(resetButton)
