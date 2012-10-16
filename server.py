@@ -4,6 +4,7 @@ import asyncore
 import socket
 import json
 import random
+import time
 
 #test svn
 
@@ -32,17 +33,11 @@ class gameHandler(asyncore.dispatcher_with_send):
 				for x in range(8):
 					print(board[x][y], end='')
 				print('|')
-			#board[decoded['x']][decoded['y']] = playerTile
 			makeMove(board, playerTile, decoded['x'], decoded['y'])
-			#x, y = makeComputerMove(decoded['x'], decoded['y'])
 			x, y = getComputerMove(board, computerTile)
 			makeMove(board, computerTile, x, y)			
-			#self.send('%s %s' % (x, y))
+			time.sleep(5)
 			self.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
-			#makeMove(board, computerTile, x, y)
-			#self.send('decoded')
-			#if data:
-			#self.send(data)
 
 	def handle_write(self):
 		sent = self.send('siema')
@@ -71,8 +66,8 @@ class gameServer(asyncore.dispatcher):
 			#print(sock.recv(8192))
 			#data = sock.recv(8192)
 			#print(data)
-			#for x in range(len(clients)):
-				#print(clients[x].getpeername())
+			for x in range(len(clients)):
+				print(clients[x].getsockname())
 			#sock.send(json.dumps({'address' : addr}, sort_keys=True, indent=4))
 			handler = gameHandler(sock)
 	
