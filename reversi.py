@@ -89,28 +89,6 @@ def convertBoard(board):
 			except:
 				pass	
 
-def getNewBoard():
-	# Creates a brand new, blank board data structure.
-	board = []
-	for i in range(8):
-		board.append([' '] * 8)
-
-	return board
-
-def resetBoard(board):
-	# Blanks out the board it is passed, except for the original starting position.
-	for x in range(8):
-		for y in range(8):
-			board[x][y] = ' '
-
-	# Starting pieces:
-	board[3][3] = 'X'
-	board[3][4] = 'O'
-	board[4][3] = 'O'
-	board[4][4] = 'X'
-	#switchHints(board)
-	convertBoard(board)
-
 def isValidMove(board, tile, xstart, ystart):
 	# Returns False if the player's move on space xstart, ystart is invalid.
 	# If it is a valid move, returns a list of spaces that would become the player's if they made a move here.
@@ -275,12 +253,6 @@ def main():
 	mainLayout.addLayout(horizontialLayout)
 	mainLayout.addLayout(horizontialBoxLayout)
 	
-	showHints = True
-	
-	board = getNewBoard()
-	resetBoard(board)
-	#switchHints(board)
-
 	w.setLayout(mainLayout)
 
 	w.move(300, 150)

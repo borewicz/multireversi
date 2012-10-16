@@ -36,6 +36,7 @@ class gameHandler(asyncore.dispatcher_with_send):
 			makeMove(board, playerTile, decoded['x'], decoded['y'])
 			x, y = getComputerMove(board, computerTile)
 			makeMove(board, computerTile, x, y)			
+			print('wait for server')
 			time.sleep(5)
 			self.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
 
@@ -85,14 +86,6 @@ def resetBoard(board):
 	board[3][4] = 'O'
 	board[4][3] = 'O'
 	board[4][4] = 'X'
-
-def makePlayerMove(board, playerTile, i, j, computerTile):
-	thread.send(i, j)
-	#makeMove(board, playerTile, i, j)
-	#convertBoard(board2)
-	#showPoints(board2, playerTile)
-	#makeComputerMove(board, computerTile)
-			
 
 def getNewBoard():
 	# Creates a brand new, blank board data structure.
@@ -202,12 +195,6 @@ def makeMove(board, tile, xstart, ystart):
 		board[x][y] = tile
 
 	return True
-
-def makeComputerMove(board, computerTile):
-	x, y = getComputerMove(board, computerTile)
-	makeMove(board, computerTile, x, y)
-	showPoints(board, playerTile)	
-	switchHints(board)
 
 def getBoardCopy(board):
 	dupeBoard = getNewBoard()
