@@ -255,6 +255,7 @@ def main():
 	
 	w.setLayout(mainLayout)
 
+	convertBoard(board)
 	w.move(300, 150)
 	w.setWindowTitle('REVERSI')
 	w.show()

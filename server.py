@@ -68,7 +68,8 @@ class gameServer(asyncore.dispatcher):
 			#data = sock.recv(8192)
 			#print(data)
 			for x in range(len(clients)):
-				print(clients[x].getsockname())
+				ipaddr, port = clients[x].getpeername()
+				print('%s %s' % (ipaddr, port))
 			#sock.send(json.dumps({'address' : addr}, sort_keys=True, indent=4))
 			handler = gameHandler(sock)
 	
