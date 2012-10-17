@@ -63,6 +63,7 @@ class asyncClient(asyncore.dispatcher):
 	def sendMove(self, x, y):
 		self.board = board
 		self.buffer = json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4)
+		print(self.buffer)
 		sent = self.send(self.buffer)
 		#to anuluje dalsze wysylanie w loopie
 		self.buffer = self.buffer[sent:] 

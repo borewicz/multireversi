@@ -39,6 +39,7 @@ class gameHandler(asyncore.dispatcher_with_send):
 			makeMove(board, computerTile, x, y)			
 			print('wait for server')
 			time.sleep(5)
+			print(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
 			self.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
 
 	def handle_write(self):
@@ -70,6 +71,8 @@ class gameServer(asyncore.dispatcher):
 			#print(data)
 			for x in range(len(clients)):
 				ipaddr, port = clients[x].getpeername()
+				if ipaddr == '127.0.0.1':
+					print(x)
 				print('%s %s' % (ipaddr, port))
 			#sock.send(json.dumps({'address' : addr}, sort_keys=True, indent=4))
 			handler = gameHandler(sock)
@@ -77,6 +80,15 @@ class gameServer(asyncore.dispatcher):
 	def handle_close(self):
 		self.close()
 	
+class clientObject(object)
+	
+	def __init__(self, clientInfo):
+		self.sock = clientInfo[0]
+		self.address = clientInfo[1]
+		
+	def send(self, x, y)
+		self.sock.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+		
 def resetBoard(board):
 	# Blanks out the board it is passed, except for the original starting position.
 	for x in range(8):
