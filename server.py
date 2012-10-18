@@ -58,12 +58,11 @@ class gameServer(asyncore.dispatcher):
 		self.listen(5)
 
 	def handle_accept(self):
-		pair = self.accept()
-		if pair is None:
+		client = self.accept()
+		if client is None:
 			pass
 		else:
-			sock, addr = pair
-			clients.append(sock)
+			clients.append(clientObject(client))
 			#print 'Incoming connection from %s' % repr(addr)
 			#print clients[0].getpeername()
 			#print(sock.recv(8192))
