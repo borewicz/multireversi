@@ -1,5 +1,4 @@
 #!/opt/local/bin/python
-#reversi-servers
 from __future__ import print_function
 import asyncore
 import socket
@@ -8,8 +7,6 @@ import sys
 import random
 import time
 import threading
-
-#test svn
 
 clients = []
 board = []
@@ -38,6 +35,7 @@ class gameServer(object):
 			try:
 				client = self.serverSock.accept()
 				self.gameThread.clients.append(clientObject(client))
+				print(client[1])
 			except KeyboardInterrupt:
 				print('parent received control-c')
 				self.running = False
@@ -50,20 +48,28 @@ class gameThread(threading.Thread):
 		self.server = serv
 		self.clients = []
 		self.running = True
-		print("Client thread created. . .")		
+		#print("Client thread created. . .")		
 
 	def run(self):
-		print("Beginning client thread loop. . .")	
+		print("beginning client thread loop")	
 		try:
 			while self.running:
 				for client in self.clients:
 					data = client.sock.recv(8192)
+					print(data)
 					if data != '':
 						decoded = json.loads(data)
 						print(decoded['x'])
 						print(decoded['y'])
+						makeMove(board, playerTile, decoded['x'], decoded['y'])
+						x, y = getComputerMove(board, computerTile)
+						makeMove(board, computerTile, x, y)			
+						print('wait for server')
+						time.sleep(5)
+						print(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+						client.sock.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
 		except KeyboardInterrupt:
-			print('parent received control-c')
+			print('parent received control-c, exiting')
 			return
 
 class clientObject(object):

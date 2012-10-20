@@ -199,13 +199,6 @@ def showPoints(board, tile):
 thread = clientThread()
 
 def main():
-	#initUI()
-	#w = QtGui.QWidget()
-	#w.resize(250, 300)
-	#w.move(300, 300)
-	#w.setWindowTitle('HEHE')
-	#w.show()
-	#reversi = Reversi()
 	playerTile, computerTile = enterPlayerTile()
 	
 	grid = QtGui.QGridLayout()
@@ -221,38 +214,22 @@ def main():
 			grid.addWidget(new[j], i, j)
 		buttonGrid.append(new)
 	
-	#computerButton = QtGui.QPushButton('Computer Move')
-	horizontialLayout = QtGui.QHBoxLayout()
-	resetButton = QtGui.QPushButton('Reset Board')
-	#horizontialLayout.addWidget(computerButton)	
-	horizontialLayout.addWidget(resetButton)
-	QtCore.QObject.connect(resetButton, QtCore.SIGNAL("clicked()"), 
-		lambda: resetBoard(board))
-	#QtCore.QObject.connect(computerButton, QtCore.SIGNAL("clicked()"),
-		#lambda: makeComputerMove(board, computerTile))
-	
-	horizontialBoxLayout = QtGui.QHBoxLayout()
-	verticalBoxLayout = QtGui.QVBoxLayout()
+	chatLayout = QtGui.QVBoxLayout()
+
 	chatBox = QtGui.QTextEdit()
 	enterBox = QtGui.QLineEdit()
-	chatLayout = QtGui.QVBoxLayout()
 	sendButton = QtGui.QPushButton('Send')
-	cancelButton = QtGui.QPushButton('Cancel')
 
-	verticalBoxLayout.addWidget(sendButton)
-	verticalBoxLayout.addWidget(cancelButton)
+	sendBoxLayout = QtGui.QHBoxLayout()
+	sendBoxLayout.addWidget(enterBox)
+	sendBoxLayout.addWidget(sendButton)
 
 	chatLayout.addWidget(chatBox)
-	chatLayout.addWidget(enterBox)
-
-	horizontialBoxLayout.addLayout(chatLayout)
-	horizontialBoxLayout.addLayout(verticalBoxLayout)
+	chatLayout.addLayout(sendBoxLayout)
 
 	mainLayout = QtGui.QVBoxLayout()
-
 	mainLayout.addLayout(grid)
-	mainLayout.addLayout(horizontialLayout)
-	mainLayout.addLayout(horizontialBoxLayout)
+	mainLayout.addLayout(chatLayout)
 	
 	w.setLayout(mainLayout)
 
@@ -260,12 +237,9 @@ def main():
 	w.move(300, 150)
 	w.setWindowTitle('REVERSI')
 	w.show()
-	#client = asyncClient('localhost')
-	#asyncore.loop()
-	#thread = clientThread()
+	
 	thread.start()
 	sys.exit(app.exec_())
-	
 
 if __name__ == '__main__':
 	main()
