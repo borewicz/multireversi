@@ -4,12 +4,10 @@ from __future__ import print_function
 import asyncore
 import socket
 import json
+import sys
 import random
 import time
-<<<<<<< HEAD
 import threading
-=======
->>>>>>> f3730b138c502b41f16ad2b237c8ac987ffb6137
 
 #test svn
 
@@ -24,7 +22,6 @@ board[4][4] = 'X'
 playerTile = 'X'
 computerTile = 'O'
 
-<<<<<<< HEAD
 class gameServer(object):
 
 	def __init__(self, host, port):
@@ -35,10 +32,15 @@ class gameServer(object):
 		self.clients = []
 		self.running = True
 		self.gameThread = gameThread(self)
+		self.gameThread.daemon = True
 		self.gameThread.start()
 		while self.running:
-			client = self.serverSock.accept()
-			self.gameThread.clients.append(clientObject(client))
+			try:
+				client = self.serverSock.accept()
+				self.gameThread.clients.append(clientObject(client))
+			except KeyboardInterrupt:
+				print('parent received control-c')
+				self.running = False
 		self.serverSock.close()
 		
 class gameThread(threading.Thread):
@@ -52,14 +54,17 @@ class gameThread(threading.Thread):
 
 	def run(self):
 		print("Beginning client thread loop. . .")	
-		while self.running:
-			for client in self.clients:
-				data = client.sock.recv(8192)
-				if data != '':
-					decoded = json.loads(data)
-					print(decoded['x'])
-					print(decoded['y'])
-
+		try:
+			while self.running:
+				for client in self.clients:
+					data = client.sock.recv(8192)
+					if data != '':
+						decoded = json.loads(data)
+						print(decoded['x'])
+						print(decoded['y'])
+		except KeyboardInterrupt:
+			print('parent received control-c')
+			return
 
 class clientObject(object):
 	
@@ -74,16 +79,11 @@ class clientObject(object):
 # old handler
 ###############
 
-=======
->>>>>>> f3730b138c502b41f16ad2b237c8ac987ffb6137
 class gameHandler(asyncore.dispatcher_with_send):
 
 	def handle_read(self):
 		data = self.recv(8192)
-<<<<<<< HEAD
-=======
 		#print(data)
->>>>>>> f3730b138c502b41f16ad2b237c8ac987ffb6137
 		if data != '':
 			decoded = json.loads(data)
 			print(decoded['x'])
@@ -106,7 +106,6 @@ class gameHandler(asyncore.dispatcher_with_send):
 		#to anuluje dalsze wysylanie w loopie
 		self.buffer = self.buffer[sent:]
 
-<<<<<<< HEAD
 #class gameServer(asyncore.dispatcher):
 
 	#def __init__(self, host, port):
@@ -134,51 +133,7 @@ class gameHandler(asyncore.dispatcher_with_send):
 	
 	#def handle_close(self):
 		#self.close()
-	
-=======
-
-class gameServer(asyncore.dispatcher):
-
-	def __init__(self, host, port):
-		asyncore.dispatcher.__init__(self)
-		self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.set_reuse_addr()
-		self.bind((host, port))
-		self.listen(5)
-
-	def handle_accept(self):
-		pair = self.accept()
-		if pair is None:
-			pass
-		else:
-			sock, addr = pair
-			clients.append(sock)
-			#print 'Incoming connection from %s' % repr(addr)
-			#print clients[0].getpeername()
-			#print(sock.recv(8192))
-			#data = sock.recv(8192)
-			#print(data)
-			for x in range(len(clients)):
-				ipaddr, port = clients[x].getpeername()
-				if ipaddr == '127.0.0.1':
-					print(x)
-				print('%s %s' % (ipaddr, port))
-			#sock.send(json.dumps({'address' : addr}, sort_keys=True, indent=4))
-			handler = gameHandler(sock)
-	
-	def handle_close(self):
-		self.close()
-	
-class clientObject(object)
-	
-	def __init__(self, clientInfo):
-		self.sock = clientInfo[0]
-		self.address = clientInfo[1]
 		
-	def send(self, x, y)
-		self.sock.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
-		
->>>>>>> f3730b138c502b41f16ad2b237c8ac987ffb6137
 def resetBoard(board):
 	# Blanks out the board it is passed, except for the original starting position.
 	for x in range(8):
@@ -335,14 +290,5 @@ def getComputerMove(board, computerTile):
 
 board = getNewBoard()
 resetBoard(board)
-<<<<<<< HEAD
-#server = gameServer('localhost', 8888)
-#asyncore.loop()
 
 server = gameServer('localhost', 8888)
-=======
-server = gameServer('localhost', 8888)
-asyncore.loop()
-
-
->>>>>>> f3730b138c502b41f16ad2b237c8ac987ffb6137
