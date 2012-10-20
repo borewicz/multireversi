@@ -28,46 +28,53 @@ class gameServer(object):
 		self.serverSock.listen(5)
 		self.clients = []
 		self.running = True
-		self.gameThread = gameThread(self)
-		self.gameThread.daemon = True
-		self.gameThread.start()
+		#self.gameThread = gameThread(self)
+		#self.gameThread.daemon = True
+		#self.gameThread.start()
 		while self.running:
 			try:
 				client = self.serverSock.accept()
-				self.gameThread.clients.append(clientObject(client))
+				thread = clientThread(client[0])
+				self.clients.append(thread)
+				thread.daemon = True
+				thread.start()
+				#self.gameThread.clients.append(clientObject(client))
 				print(client[1])
 			except KeyboardInterrupt:
 				print('parent received control-c')
 				self.running = False
 		self.serverSock.close()
 		
-class gameThread(threading.Thread):
+class clientThread(threading.Thread):
 
-	def __init__(self, serv):
+	def __init__(self, sock):
 		threading.Thread.__init__(self)
-		self.server = serv
-		self.clients = []
+		#self.server = serv
+		#self.clients = []
 		self.running = True
+		self.sock = sock
+		#self.board = board
 		#print("Client thread created. . .")		
+		self.board = getNewBoard()
+		resetBoard(self.board)
 
 	def run(self):
 		print("beginning client thread loop")	
 		try:
 			while self.running:
-				for client in self.clients:
-					data = client.sock.recv(8192)
-					print(data)
-					if data != '':
-						decoded = json.loads(data)
-						print(decoded['x'])
-						print(decoded['y'])
-						makeMove(board, playerTile, decoded['x'], decoded['y'])
-						x, y = getComputerMove(board, computerTile)
-						makeMove(board, computerTile, x, y)			
-						print('wait for server')
-						time.sleep(5)
-						print(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
-						client.sock.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+				data = self.sock.recv(8192)
+				print(data)
+				if data != '':
+					decoded = json.loads(data)
+					print(decoded['x'])
+					print(decoded['y'])
+					makeMove(self.board, playerTile, decoded['x'], decoded['y'])
+					x, y = getComputerMove(self.board, computerTile)
+					makeMove(self.board, computerTile, x, y)			
+					#print('wait for server')
+					#time.sleep(5)
+					print(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+					self.sock.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
 		except KeyboardInterrupt:
 			print('parent received control-c, exiting')
 			return
@@ -77,6 +84,7 @@ class clientObject(object):
 	def __init__(self, clientInfo):
 		self.sock = clientInfo[0]
 		self.address = clientInfo[1]
+		self.board = board
 		
 	def send(self, x, y):
 		self.sock.send(json.dumps({'id' : '1', 'x' : x, 'y' : y}, sort_keys=True, indent=4))
