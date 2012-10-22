@@ -6,6 +6,7 @@ import random
 import asyncore
 import socket
 import json
+import uuid
 from PyQt4 import QtGui, QtCore
 
 showHints = False 
@@ -30,7 +31,9 @@ class asyncClient(asyncore.dispatcher):
 		self.connect( (host, 8888) )
 		#self.buffer = 'GET %s HTTP/1.0\r\n\r\n' % path
 		#self.buffer = json.dumps({'x' : 1, 'y' : 1}, sort_keys=True, indent=4)
-		self.buffer = ''
+		self.id = str(uuid.uuid1())
+		self.buffer = 'siema'
+		#self.send('connecting')
 
 	def handle_connect(self):
 		pass
@@ -40,25 +43,28 @@ class asyncClient(asyncore.dispatcher):
 
 	def handle_read(self):
 		response = self.recv(8192)
-		decoded = json.loads(response)
-		x = decoded['x']
-		y = decoded['y']
-		#board[x][y] = computerTile
-		makeMove(board, computerTile, x, y)
-		for y in range(8):
-			print('%s|' % (y+1), end='')
-			for x in range(8):
-				print(board[x][y], end='')
-			print('|')
-		convertBoard(board)
+		if response != '':
+			decoded = json.loads(response)
+			x = decoded['x']
+			y = decoded['y']
+			#board[x][y] = computerTile
+			makeMove(board, computerTile, x, y)
+			for y in range(8):
+				print('%s|' % (y+1), end='')
+				for x in range(8):
+					print(board[x][y], end='')
+				print('|')
+			convertBoard(board)
 
 	def writable(self):
 		return (len(self.buffer) > 0)
 
-	#def handle_write(self):
-		#sent = self.send(self.buffer)
-		##to anuluje dalsze wysylanie w loopie
-		#self.buffer = self.buffer[sent:] 
+	def handle_write(self):
+		
+		self.buffer = json.dumps({'id' : self.id }, sort_keys=True, indent=4)
+		sent = self.send(self.buffer)
+		#to anuluje dalsze wysylanie w loopie
+		self.buffer = self.buffer[sent:] 
 
 	def sendMove(self, x, y):
 		self.board = board

@@ -66,8 +66,8 @@ class clientThread(threading.Thread):
 				print(data)
 				if data != '':
 					decoded = json.loads(data)
-					print(decoded['x'])
-					print(decoded['y'])
+					#print(decoded['x'])
+					#print(decoded['y'])
 					makeMove(self.board, playerTile, decoded['x'], decoded['y'])
 					x, y = getComputerMove(self.board, computerTile)
 					makeMove(self.board, computerTile, x, y)			
@@ -75,6 +75,9 @@ class clientThread(threading.Thread):
 					#time.sleep(5)
 					print(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
 					self.sock.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+				#else:
+					
+
 		except KeyboardInterrupt:
 			print('parent received control-c, exiting')
 			return
