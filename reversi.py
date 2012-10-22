@@ -60,7 +60,6 @@ class asyncClient(asyncore.dispatcher):
 		return (len(self.buffer) > 0)
 
 	def handle_write(self):
-		
 		self.buffer = json.dumps({'id' : self.id }, sort_keys=True, indent=4)
 		sent = self.send(self.buffer)
 		#to anuluje dalsze wysylanie w loopie

@@ -19,6 +19,8 @@ board[4][4] = 'X'
 playerTile = 'X'
 computerTile = 'O'
 
+clients = []
+
 class gameServer(object):
 
 	def __init__(self, host, port):
@@ -26,7 +28,6 @@ class gameServer(object):
 		self.serverSock = socket.socket()
 		self.serverSock.bind((host, port))
 		self.serverSock.listen(5)
-		self.clients = []
 		self.running = True
 		#self.gameThread = gameThread(self)
 		#self.gameThread.daemon = True
@@ -34,10 +35,18 @@ class gameServer(object):
 		while self.running:
 			try:
 				client = self.serverSock.accept()
+				data = client[0].recv(8192)
+				decoded = json.loads(data)
+				print(decoded['id'])
 				thread = clientThread(client[0])
-				self.clients.append(thread)
+				clients.append(thread)								
+				#pindol = choice(self.clients)
+				#while pindol.running == False:
+					#pindol = choice(self.clients)
+				#thread.pindol = pindol.sock
 				thread.daemon = True
 				thread.start()
+				#pindol.running = True				
 				#self.gameThread.clients.append(clientObject(client))
 				print(client[1])
 			except KeyboardInterrupt:
@@ -53,44 +62,39 @@ class clientThread(threading.Thread):
 		#self.clients = []
 		self.running = True
 		self.sock = sock
+		self.haveRival = False
 		#self.board = board
 		#print("Client thread created. . .")		
 		self.board = getNewBoard()
 		resetBoard(self.board)
 
+	def findPindol(self):
+		if self.haveRival == True: return True
+		print('waiting for rival')
+		pindol = random.choice(clients)
+		while (pindol.haveRival == True):
+			pindol = random.choice(clients)
+		self.rival = pindol.sock
+		self.haveRival = True
+		print('found rival')
+		return True
+	
 	def run(self):
 		print("beginning client thread loop")	
-		try:
-			while self.running:
-				data = self.sock.recv(8192)
-				print(data)
-				if data != '':
-					decoded = json.loads(data)
-					#print(decoded['x'])
-					#print(decoded['y'])
-					makeMove(self.board, playerTile, decoded['x'], decoded['y'])
-					x, y = getComputerMove(self.board, computerTile)
-					makeMove(self.board, computerTile, x, y)			
-					#print('wait for server')
-					#time.sleep(5)
-					print(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
-					self.sock.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
-				#else:
-					
-
-		except KeyboardInterrupt:
-			print('parent received control-c, exiting')
-			return
-
-class clientObject(object):
-	
-	def __init__(self, clientInfo):
-		self.sock = clientInfo[0]
-		self.address = clientInfo[1]
-		self.board = board
-		
-	def send(self, x, y):
-		self.sock.send(json.dumps({'id' : '1', 'x' : x, 'y' : y}, sort_keys=True, indent=4))
+		while self.findPindol():
+			data = self.sock.recv(8192)
+			print(data)
+			if data != '':
+				decoded = json.loads(data)
+				#print(decoded['x'])
+				#print(decoded['y'])
+				makeMove(self.board, playerTile, decoded['x'], decoded['y'])
+				x, y = getComputerMove(self.board, computerTile)
+				makeMove(self.board, computerTile, x, y)			
+				#print('wait for server')
+				#time.sleep(5)
+				print(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+				self.rival.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
 
 ###############
 # old handler
@@ -100,21 +104,14 @@ class gameHandler(asyncore.dispatcher_with_send):
 
 	def handle_read(self):
 		data = self.recv(8192)
-		#print(data)
+		print(data)
 		if data != '':
 			decoded = json.loads(data)
 			print(decoded['x'])
 			print(decoded['y'])
-			for y in range(8):
-				print('%s|' % (y+1), end='')
-				for x in range(8):
-					print(board[x][y], end='')
-				print('|')
 			makeMove(board, playerTile, decoded['x'], decoded['y'])
 			x, y = getComputerMove(board, computerTile)
 			makeMove(board, computerTile, x, y)			
-			print('wait for server')
-			time.sleep(5)
 			print(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
 			self.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
 
@@ -124,28 +121,24 @@ class gameHandler(asyncore.dispatcher_with_send):
 		self.buffer = self.buffer[sent:]
 
 #class gameServer(asyncore.dispatcher):
-
+#
 	#def __init__(self, host, port):
 		#asyncore.dispatcher.__init__(self)
 		#self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
 		#self.set_reuse_addr()
 		#self.bind((host, port))
 		#self.listen(5)
-
+#
 	#def handle_accept(self):
 		##adding client to clients list
 		#client = self.accept()
-		#if client is None:
-			#pass
+		##if client is None:
+			##pass
 		#else:
 			#clients.append(clientObject(client))
-			##data = sock.recv(8192)
-			##print(data)
-			#for x in range(len(clients)):
-				#ipaddr, port = clients[x].getpeername()
-				#if ipaddr == '127.0.0.1':
-					#print(x)
-				#print('%s %s' % (ipaddr, port))
+			#data = sock.recv(8192)
+			#print(data)
+			#print(client[0])
 			#handler = gameHandler(sock)
 	
 	#def handle_close(self):
