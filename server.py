@@ -68,14 +68,24 @@ class clientThread(threading.Thread):
 		self.board = getNewBoard()
 		resetBoard(self.board)
 
+	def getRivalTile(tile):
+		if tile == 'X':
+			return 'O'
+		else:
+			return 'X'
+
 	def findPindol(self):
 		if self.haveRival == True: return True
 		print('waiting for rival')
 		pindol = random.choice(clients)
-		while (pindol.haveRival == True):
+		while (pindol.haveRival == True) or (pindol.sock == self.sock):
 			pindol = random.choice(clients)
 		self.rival = pindol.sock
 		self.haveRival = True
+		pindol.rival = self.sock
+		pindol.haveRival = True
+		self.tile = random.choice([computerTile, playerTile])
+		pindol.tile = self.getRivalTile(self.tile)
 		print('found rival')
 		return True
 	
@@ -86,11 +96,11 @@ class clientThread(threading.Thread):
 			print(data)
 			if data != '':
 				decoded = json.loads(data)
-				#print(decoded['x'])
-				#print(decoded['y'])
-				makeMove(self.board, playerTile, decoded['x'], decoded['y'])
-				x, y = getComputerMove(self.board, computerTile)
-				makeMove(self.board, computerTile, x, y)			
+				x = decoded['x']
+				y = decoded['y']
+				makeMove(self.board, rival.tile, decoded['x'], decoded['y'])
+				#x, y = getComputerMove(self.board, computerTile)
+				#makeMove(self.board, computerTile, x, y)			
 				#print('wait for server')
 				#time.sleep(5)
 				print(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
