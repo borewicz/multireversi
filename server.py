@@ -35,17 +35,17 @@ class gameServer(object):
 		while self.running:
 			try:
 				client = self.serverSock.accept()
-				data = client[0].recv(8192)
-				decoded = json.loads(data)
-				print(decoded['id'])
+				#data = client[0].recv(8192)
+				#decoded = json.loads(data)
+				#print(decoded['id'])
 				thread = clientThread(client[0])
-				clients.append(thread)								
+				thread.daemon = True
+				thread.start()
+				#clients.append(thread)								
 				#pindol = choice(self.clients)
 				#while pindol.running == False:
 					#pindol = choice(self.clients)
 				#thread.pindol = pindol.sock
-				thread.daemon = True
-				thread.start()
 				#pindol.running = True				
 				#self.gameThread.clients.append(clientObject(client))
 				print(client[1])
@@ -60,13 +60,14 @@ class clientThread(threading.Thread):
 		threading.Thread.__init__(self)
 		#self.server = serv
 		#self.clients = []
-		self.running = True
+		#self.running = True
 		self.sock = sock
 		self.haveRival = False
+		clients.append(self)
 		#self.board = board
 		#print("Client thread created. . .")		
-		self.board = getNewBoard()
-		resetBoard(self.board)
+		#self.board = getNewBoard()
+		#resetBoard(self.board)
 
 	def getRivalTile(self, tile):
 		if tile == 'X':
@@ -95,19 +96,18 @@ class clientThread(threading.Thread):
 		print("beginning client thread loop")	
 		while self.findPindol():
 			data = self.sock.recv(8192)
-			print(data)
-			if data != '':
-				#decoded = json.loads(data)
-				#x = decoded['x']
-				#y = decoded['y']
-				#makeMove(self.board, self.getRivalTile(self.tile), decoded['x'], decoded['y'])
-				#x, y = getComputerMove(self.board, computerTile)
-				#makeMove(self.board, computerTile, x, y)			
-				#print('wait for server')
-				#time.sleep(5)
-				#print(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
-				#self.rival.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
-				self.rival.send(data)
+			self.rival.send(data)
+			#decoded = json.loads(data)
+			#x = decoded['x']
+			#y = decoded['y']
+			#makeMove(self.board, self.getRivalTile(self.tile), decoded['x'], decoded['y'])
+			#x, y = getComputerMove(self.board, computerTile)
+			#makeMove(self.board, computerTile, x, y)			
+			#print('wait for server')
+			#time.sleep(5)
+			#print(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+			#self.rival.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+				
 
 ###############
 # old handler

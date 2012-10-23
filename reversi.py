@@ -1,12 +1,12 @@
 #!/opt/local/bin/python
 from __future__ import print_function
 import sys
-import random
+#import random
 #import time
 import asyncore
 import socket
 import json
-import uuid
+#import uuid
 from PyQt4 import QtGui, QtCore
 
 showHints = False 
@@ -31,8 +31,8 @@ class asyncClient(asyncore.dispatcher):
 		self.connect( (host, 8888) )
 		#self.buffer = 'GET %s HTTP/1.0\r\n\r\n' % path
 		#self.buffer = json.dumps({'x' : 1, 'y' : 1}, sort_keys=True, indent=4)
-		self.id = str(uuid.uuid1())
-		self.buffer = 'siema'
+		#self.id = str(uuid.uuid1())
+		self.buffer = ''
 		#self.send('connecting')
 
 	def getRivalTile(self, tile):
@@ -66,7 +66,7 @@ class asyncClient(asyncore.dispatcher):
 		return (len(self.buffer) > 0)
 
 	def handle_write(self):
-		self.buffer = json.dumps({'id' : self.id }, sort_keys=True, indent=4)
+		#self.buffer = json.dumps({'id' : self.id }, sort_keys=True, indent=4)
 		sent = self.send(self.buffer)
 		#to anuluje dalsze wysylanie w loopie
 		self.buffer = self.buffer[sent:] 
@@ -187,7 +187,7 @@ def enterPlayerTile():
 def makeMove(board, tile, xstart, ystart):
 	tilesToFlip = isValidMove(board, tile, xstart, ystart)
 
-	print(tilesToFlip)
+	#print(tilesToFlip)
 
 	if tilesToFlip == False:
 		return False
