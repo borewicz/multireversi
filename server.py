@@ -40,15 +40,15 @@ class gameServer(object):
 				#print(decoded['id'])
 				thread = clientThread(client[0])
 				thread.daemon = True
+				clients.append(thread)
 				thread.start()
-				#clients.append(thread)								
 				#pindol = choice(self.clients)
 				#while pindol.running == False:
 					#pindol = choice(self.clients)
 				#thread.pindol = pindol.sock
 				#pindol.running = True				
 				#self.gameThread.clients.append(clientObject(client))
-				print(client[1])
+				#print(client[1])
 			except KeyboardInterrupt:
 				print('parent received control-c')
 				self.running = False
@@ -63,7 +63,6 @@ class clientThread(threading.Thread):
 		#self.running = True
 		self.sock = sock
 		self.haveRival = False
-		clients.append(self)
 		#self.board = board
 		#print("Client thread created. . .")		
 		#self.board = getNewBoard()
@@ -76,27 +75,34 @@ class clientThread(threading.Thread):
 			return 'X'
 
 	def findPindol(self):
-		if self.haveRival == True: return True
+		if self.haveRival == True: 
+			#print('already have rival')
+			return True
 		print('waiting for rival')
-		pindol = random.choice(clients)
-		while (pindol.haveRival == True) or (pindol.sock == self.sock):
+		#pindol = random.choice(clients)
+		if len(clients) >= 2:
 			pindol = random.choice(clients)
-		self.rival = pindol.sock
-		self.haveRival = True
-		pindol.rival = self.sock
-		pindol.haveRival = True
-		self.tile = random.choice([computerTile, playerTile])
-		pindol.tile = self.getRivalTile(self.tile)
-		pindol.sock.send(json.dumps({'tile' : self.tile}, sort_keys=True, indent=4))	
-		self.sock.send(json.dumps({'tile' : pindol.tile}, sort_keys=True, indent=4))
-		print('found rival')
-		return True
+			while (pindol.haveRival == True) or (pindol.sock == self.sock):
+				pindol = random.choice(clients)
+			self.rival = pindol.sock
+			print(pindol.sock.getpeername())
+			print(self.sock.getpeername())
+			self.haveRival = True
+			pindol.rival = self.sock
+			pindol.haveRival = True
+			self.tile = random.choice([computerTile, playerTile])
+			pindol.tile = self.getRivalTile(self.tile)
+			pindol.sock.send(json.dumps({'tile' : self.tile}, sort_keys=True, indent=4))	
+			self.sock.send(json.dumps({'tile' : pindol.tile}, sort_keys=True, indent=4))
+			print('found rival')
+			return True
+		else: return False
 	
 	def run(self):
 		print("beginning client thread loop")	
 		while self.findPindol():
-			data = self.sock.recv(8192)
-			self.rival.send(data)
+			#print(self.sock.getpeername())
+			self.rival.send(self.sock.recv(8192))
 			#decoded = json.loads(data)
 			#x = decoded['x']
 			#y = decoded['y']

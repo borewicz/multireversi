@@ -23,6 +23,12 @@ computerTile = 'O'
 app = QtGui.QApplication(sys.argv)
 w = QtGui.QWidget()
 
+def getRivalTile(tile):
+	if tile == 'X':
+		return 'O'
+	else:
+		return 'X'
+
 class asyncClient(asyncore.dispatcher):
 
 	def __init__(self, host):
@@ -34,12 +40,6 @@ class asyncClient(asyncore.dispatcher):
 		#self.id = str(uuid.uuid1())
 		self.buffer = ''
 		#self.send('connecting')
-
-	def getRivalTile(self, tile):
-		if tile == 'X':
-			return 'O'
-		else:
-			return 'X'
 
 	def handle_connect(self):
 		pass
@@ -58,7 +58,7 @@ class asyncClient(asyncore.dispatcher):
 			else:
 				x = decoded['x']
 				y = decoded['y']
-				makeMove(board, self.getRivalTile(self.tile), x, y)
+				makeMove(board, getRivalTile(self.tile), x, y)
 				convertBoard(board)
 				w.setWindowTitle('Your turn, %s' % self.tile)				
 
@@ -71,18 +71,6 @@ class asyncClient(asyncore.dispatcher):
 		#to anuluje dalsze wysylanie w loopie
 		self.buffer = self.buffer[sent:] 
 
-	def sendMove(self, x, y):
-		#self.board = board
-		print(self.tile)
-		if makeMove(board, self.tile, x, y):
-			self.buffer = json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4)
-			print(self.buffer)
-			sent = self.send(self.buffer)
-			#to anuluje dalsze wysylanie w loopie
-			self.buffer = self.buffer[sent:] 
-			w.setWindowTitle('%s has turn' % self.getRivalTile(self.tile))
-			convertBoard(board)
-
 class clientThread(QtCore.QThread):
 
 	client = asyncClient('localhost')
@@ -91,8 +79,16 @@ class clientThread(QtCore.QThread):
 		asyncore.loop()
 
 	def sendMove(self, x, y):
-		self.client.sendMove(x, y)
-
+		if makeMove(board, self.client.tile, x, y):
+			convertBoard(board)			
+			self.client.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+			#self.buffer = json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4)
+			#print(self.buffer)
+			#sent = self.send(self.buffer)
+			#to anuluje dalsze wysylanie w loopie
+			#self.buffer = self.buffer[sent:] 
+			w.setWindowTitle('%s has turn' % getRivalTile(self.client.tile))
+	
 def __init__():
 	super(Reversi, self).__init__()
 
