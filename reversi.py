@@ -54,11 +54,13 @@ class asyncClient(asyncore.dispatcher):
 			decoded = json.loads(response)
 			if decoded.get('tile'):
 				self.tile = decoded['tile']
+				w.setWindowTitle('You are %s' % self.tile)				
 			else:
 				x = decoded['x']
 				y = decoded['y']
 				makeMove(board, self.getRivalTile(self.tile), x, y)
 				convertBoard(board)
+				w.setWindowTitle('Your turn, %s' % self.tile)				
 
 	def writable(self):
 		return (len(self.buffer) > 0)
@@ -71,12 +73,15 @@ class asyncClient(asyncore.dispatcher):
 
 	def sendMove(self, x, y):
 		#self.board = board
+		print(self.tile)
 		if makeMove(board, self.tile, x, y):
 			self.buffer = json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4)
 			print(self.buffer)
 			sent = self.send(self.buffer)
 			#to anuluje dalsze wysylanie w loopie
 			self.buffer = self.buffer[sent:] 
+			w.setWindowTitle('%s has turn' % self.getRivalTile(self.tile))
+			convertBoard(board)
 
 class clientThread(QtCore.QThread):
 
@@ -86,7 +91,6 @@ class clientThread(QtCore.QThread):
 		asyncore.loop()
 
 	def sendMove(self, x, y):
-		makeMove(board, playerTile, x, y)		
 		self.client.sendMove(x, y)
 
 def __init__():
@@ -182,6 +186,8 @@ def enterPlayerTile():
 
 def makeMove(board, tile, xstart, ystart):
 	tilesToFlip = isValidMove(board, tile, xstart, ystart)
+
+	print(tilesToFlip)
 
 	if tilesToFlip == False:
 		return False
