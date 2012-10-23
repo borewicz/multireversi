@@ -68,7 +68,7 @@ class clientThread(threading.Thread):
 		self.board = getNewBoard()
 		resetBoard(self.board)
 
-	def getRivalTile(tile):
+	def getRivalTile(self, tile):
 		if tile == 'X':
 			return 'O'
 		else:
@@ -98,7 +98,7 @@ class clientThread(threading.Thread):
 				decoded = json.loads(data)
 				x = decoded['x']
 				y = decoded['y']
-				makeMove(self.board, rival.tile, decoded['x'], decoded['y'])
+				makeMove(self.board, self.getRivalTile(self.tile), decoded['x'], decoded['y'])
 				#x, y = getComputerMove(self.board, computerTile)
 				#makeMove(self.board, computerTile, x, y)			
 				#print('wait for server')
