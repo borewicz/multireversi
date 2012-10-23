@@ -25,7 +25,7 @@ class gameServer(object):
 
 	def __init__(self, host, port):
 		print('gameServer init')
-		self.serverSock = socket.socket()
+		self.serverSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.serverSock.bind((host, port))
 		self.serverSock.listen(5)
 		self.running = True
@@ -86,6 +86,8 @@ class clientThread(threading.Thread):
 		pindol.haveRival = True
 		self.tile = random.choice([computerTile, playerTile])
 		pindol.tile = self.getRivalTile(self.tile)
+		pindol.sock.send(json.dumps({'tile' : self.tile}, sort_keys=True, indent=4))	
+		self.sock.send(json.dumps({'tile' : pindol.tile}, sort_keys=True, indent=4))
 		print('found rival')
 		return True
 	
@@ -95,16 +97,17 @@ class clientThread(threading.Thread):
 			data = self.sock.recv(8192)
 			print(data)
 			if data != '':
-				decoded = json.loads(data)
-				x = decoded['x']
-				y = decoded['y']
-				makeMove(self.board, self.getRivalTile(self.tile), decoded['x'], decoded['y'])
+				#decoded = json.loads(data)
+				#x = decoded['x']
+				#y = decoded['y']
+				#makeMove(self.board, self.getRivalTile(self.tile), decoded['x'], decoded['y'])
 				#x, y = getComputerMove(self.board, computerTile)
 				#makeMove(self.board, computerTile, x, y)			
 				#print('wait for server')
 				#time.sleep(5)
-				print(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
-				self.rival.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+				#print(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+				#self.rival.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+				self.rival.send(data)
 
 ###############
 # old handler
