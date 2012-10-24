@@ -4,7 +4,7 @@ import sys
 #import random
 #import time
 import threading
-import asyncore
+#import asyncore
 import socket
 import json
 #import uuid
@@ -30,52 +30,8 @@ def getRivalTile(tile):
 	else:
 		return 'X'
 
-class asyncClient(asyncore.dispatcher):
-
-	def __init__(self, host):
-		asyncore.dispatcher.__init__(self)
-		#self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-		#self.connect( (host, 8888) )
-		#self.buffer = 'GET %s HTTP/1.0\r\n\r\n' % path
-		#self.buffer = json.dumps({'x' : 1, 'y' : 1}, sort_keys=True, indent=4)
-		#self.id = str(uuid.uuid1())
-		self.buffer = ''
-		#self.send('connecting')
-
-	def handle_connect(self):
-		pass
-
-	def handle_close(self):
-		self.close()
-
-	def handle_read(self):
-		response = self.recv(1024)
-		#print(response)
-		if response != '':
-			decoded = json.loads(response)
-			if decoded.get('tile'):
-				self.tile = decoded['tile']
-				w.setWindowTitle('You are %s' % self.tile)				
-			else:
-				x = decoded['x']
-				y = decoded['y']
-				makeMove(board, getRivalTile(self.tile), x, y)
-				convertBoard(board)
-				w.setWindowTitle('Your turn, %s' % self.tile)				
-
-	def writable(self):
-		return (len(self.buffer) > 0)
-
-	def handle_write(self):
-		#self.buffer = json.dumps({'id' : self.id }, sort_keys=True, indent=4)
-		sent = self.send(self.buffer)
-		#to anuluje dalsze wysylanie w loopie
-		self.buffer = self.buffer[sent:] 
-
-#class clientThread(QtCore.QThread):
 class clientThread(threading.Thread):
 
-	#client = asyncClient('localhost')
 	def __init__(self, host):
 		threading.Thread.__init__(self)
 		#self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -106,11 +62,6 @@ class clientThread(threading.Thread):
 			convertBoard(board)			
 			result = self.client.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
 			#print('wyjscie %s' % result)
-			#self.buffer = json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4)
-			#print(self.buffer)
-			#sent = self.send(self.buffer)
-			#to anuluje dalsze wysylanie w loopie
-			#self.buffer = self.buffer[sent:] 
 			w.setWindowTitle('%s has turn' % getRivalTile(self.tile))
 	
 def __init__():
