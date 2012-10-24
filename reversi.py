@@ -34,8 +34,8 @@ class asyncClient(asyncore.dispatcher):
 
 	def __init__(self, host):
 		asyncore.dispatcher.__init__(self)
-		self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.connect( (host, 8888) )
+		#self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+		#self.connect( (host, 8888) )
 		#self.buffer = 'GET %s HTTP/1.0\r\n\r\n' % path
 		#self.buffer = json.dumps({'x' : 1, 'y' : 1}, sort_keys=True, indent=4)
 		#self.id = str(uuid.uuid1())
@@ -78,9 +78,10 @@ class clientThread(threading.Thread):
 	#client = asyncClient('localhost')
 	def __init__(self, host):
 		threading.Thread.__init__(self)
-		self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.client.connect( (host, 8888) )
-		self.client.setblocking(0)		
+		#self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		#self.client.connect( (host, 8888) )
+		#self.client.setblocking(0)		
+		self.client = socket.create_connection((host, 8888))
 		self.buffer = ''
 		self.running = True
 
@@ -88,7 +89,7 @@ class clientThread(threading.Thread):
 		#asyncore.loop()
 		while self.running:			
 			response = self.client.recv(8192)
-			if response != '':
+			if response:
 				decoded = json.loads(response)
 				if decoded.get('tile'):
 					self.tile = decoded['tile']

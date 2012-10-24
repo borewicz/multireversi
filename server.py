@@ -7,6 +7,7 @@ import sys
 import random
 import time
 import threading
+import SocketServer
 
 clients = []
 board = []
@@ -27,7 +28,7 @@ class gameServer(object):
 		print('gameServer init')
 		self.serverSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.serverSock.bind((host, port))
-		self.serverSock.listen(5)
+		self.serverSock.listen(1)
 		self.running = True
 		#self.gameThread = gameThread(self)
 		#self.gameThread.daemon = True
