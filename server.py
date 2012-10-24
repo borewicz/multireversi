@@ -84,21 +84,22 @@ class clientThread(threading.Thread):
 		else: return False
 	
 	def run(self):
+		#self.findPindol()
 		print("beginning client thread loop")	
 		#if self.findPindol():
 		#print(self.sock.getpeername())
+		#if self.findPindol():		
 		while self.running:
 			if self.findPindol():
 				data = self.sock.recv(1024)
-				#print(data)
 				if data:
 					print(data)
-					#self.rival.send(data)
 					self.rival.send(data)
 				else:
 					self.sock.close()
 					print('closing socket')
 					self.running = False
+
 
 ###############
 # old handler

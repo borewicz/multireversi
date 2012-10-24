@@ -49,7 +49,7 @@ class asyncClient(asyncore.dispatcher):
 		self.close()
 
 	def handle_read(self):
-		response = self.recv(8192)
+		response = self.recv(1024)
 		#print(response)
 		if response != '':
 			decoded = json.loads(response)
@@ -105,7 +105,7 @@ class clientThread(threading.Thread):
 		if makeMove(board, self.tile, x, y):
 			convertBoard(board)			
 			result = self.client.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
-			print('wyjscie %s' % result)
+			#print('wyjscie %s' % result)
 			#self.buffer = json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4)
 			#print(self.buffer)
 			#sent = self.send(self.buffer)
