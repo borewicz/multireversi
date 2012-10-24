@@ -3,6 +3,7 @@ from __future__ import print_function
 import sys
 #import random
 #import time
+import threading
 import asyncore
 import socket
 import json
@@ -49,7 +50,7 @@ class asyncClient(asyncore.dispatcher):
 
 	def handle_read(self):
 		response = self.recv(8192)
-		print(response)
+		#print(response)
 		if response != '':
 			decoded = json.loads(response)
 			if decoded.get('tile'):
@@ -71,23 +72,45 @@ class asyncClient(asyncore.dispatcher):
 		#to anuluje dalsze wysylanie w loopie
 		self.buffer = self.buffer[sent:] 
 
-class clientThread(QtCore.QThread):
+#class clientThread(QtCore.QThread):
+class clientThread(threading.Thread):
 
-	client = asyncClient('localhost')
+	#client = asyncClient('localhost')
+	def __init__(self, host):
+		threading.Thread.__init__(self)
+		self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.client.connect( (host, 8888) )
+		self.client.setblocking(0)		
+		self.buffer = ''
+		self.running = True
 
 	def run(self):
-		asyncore.loop()
+		#asyncore.loop()
+		while self.running:			
+			response = self.client.recv(8192)
+			if response != '':
+				decoded = json.loads(response)
+				if decoded.get('tile'):
+					self.tile = decoded['tile']
+					w.setWindowTitle('You are %s' % self.tile)				
+				else:
+					x = decoded['x']
+					y = decoded['y']
+					makeMove(board, getRivalTile(self.tile), x, y)
+					convertBoard(board)
+					w.setWindowTitle('Your turn, %s' % self.tile)	
 
 	def sendMove(self, x, y):
-		if makeMove(board, self.client.tile, x, y):
+		if makeMove(board, self.tile, x, y):
 			convertBoard(board)			
-			self.client.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+			result = self.client.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+			print('wyjscie %s' % result)
 			#self.buffer = json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4)
 			#print(self.buffer)
 			#sent = self.send(self.buffer)
 			#to anuluje dalsze wysylanie w loopie
 			#self.buffer = self.buffer[sent:] 
-			w.setWindowTitle('%s has turn' % getRivalTile(self.client.tile))
+			w.setWindowTitle('%s has turn' % getRivalTile(self.tile))
 	
 def __init__():
 	super(Reversi, self).__init__()
@@ -208,7 +231,7 @@ def showPoints(board, tile):
 
 	w.setWindowTitle('You: %s, Computer: %s' % (scores[tile], scores[computerTile]))
 
-thread = clientThread()
+thread = clientThread('localhost')
 
 def main():
 	playerTile, computerTile = enterPlayerTile()
@@ -249,7 +272,7 @@ def main():
 	w.move(300, 150)
 	w.setWindowTitle('REVERSI')
 	w.show()
-	
+	thread.daemon = True
 	thread.start()
 	sys.exit(app.exec_())
 

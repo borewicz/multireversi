@@ -62,6 +62,7 @@ class clientThread(threading.Thread):
 		#self.clients = []
 		#self.running = True
 		self.sock = sock
+		#self.sock.setblocking(0)
 		self.haveRival = False
 		#self.board = board
 		#print("Client thread created. . .")		
@@ -100,9 +101,14 @@ class clientThread(threading.Thread):
 	
 	def run(self):
 		print("beginning client thread loop")	
-		while self.findPindol():
+		if self.findPindol():
 			#print(self.sock.getpeername())
-			self.rival.send(self.sock.recv(8192))
+			data = self.sock.recv(8192)
+			#print(data)
+			if data:
+				print(data)
+				self.rival.sendall(data)
+			#print(result)
 			#decoded = json.loads(data)
 			#x = decoded['x']
 			#y = decoded['y']
