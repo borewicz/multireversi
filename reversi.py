@@ -55,14 +55,16 @@ class clientThread(threading.Thread):
 					y = decoded['y']
 					makeMove(board, getRivalTile(self.tile), x, y)
 					convertBoard(board)
-					w.setWindowTitle('Your turn, %s' % self.tile)	
+					scores = getScoreOfBoard(board)					
+					w.setWindowTitle('Your turn, %s. X: %s, O: %s' % (self.tile, scores[self.tile], scores[getRivalTile(self.tile)]))
 
 	def sendMove(self, x, y):
 		if makeMove(board, self.tile, x, y):
 			convertBoard(board)			
+			scores = getScoreOfBoard(board)	
 			result = self.client.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
 			#print('wyjscie %s' % result)
-			w.setWindowTitle('%s has turn' % getRivalTile(self.tile))
+			w.setWindowTitle('%s has turn.  X: %s, O: %s' % (getRivalTile(self.tile), scores[self.tile], scores[getRivalTile(self.tile)]))
 	
 def __init__():
 	super(Reversi, self).__init__()
