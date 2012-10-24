@@ -26,49 +26,33 @@ class gameServer(object):
 
 	def __init__(self, host, port):
 		print('gameServer init')
-		self.serverSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.serverSock.bind((host, port))
-		self.serverSock.listen(1)
-		self.running = True
-		#self.gameThread = gameThread(self)
-		#self.gameThread.daemon = True
-		#self.gameThread.start()
-		while self.running:
-			try:
-				client = self.serverSock.accept()
-				#data = client[0].recv(8192)
-				#decoded = json.loads(data)
-				#print(decoded['id'])
-				thread = clientThread(client[0])
-				thread.daemon = True
-				clients.append(thread)
-				thread.start()
-				#pindol = choice(self.clients)
-				#while pindol.running == False:
-					#pindol = choice(self.clients)
-				#thread.pindol = pindol.sock
-				#pindol.running = True				
-				#self.gameThread.clients.append(clientObject(client))
-				#print(client[1])
-			except KeyboardInterrupt:
-				print('parent received control-c')
-				self.running = False
-		self.serverSock.close()
-		
+		try:
+			self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			self.server.bind((host, port))
+			self.server.listen(1)
+			self.running = True
+			while self.running:
+				try:
+					client = self.server.accept()
+					thread = clientThread(client[0])
+					thread.daemon = True
+					clients.append(thread)
+					thread.start()
+				except KeyboardInterrupt:
+					print('parent received control-c')
+					self.running = False
+		except socket.error, (value,message): 
+			if self.server: 
+				self.server.close() 
+			print ("Could not open socket: " + message)
+				
 class clientThread(threading.Thread):
 
 	def __init__(self, sock):
 		threading.Thread.__init__(self)
-		#self.server = serv
-		#self.clients = []
-		#self.running = True
 		self.sock = sock
-		#self.sock.setblocking(0)
 		self.haveRival = False
-		#self.board = board
-		#print("Client thread created. . .")		
-		#self.board = getNewBoard()
-		#resetBoard(self.board)
+		self.running = True
 
 	def getRivalTile(self, tile):
 		if tile == 'X':
@@ -80,7 +64,6 @@ class clientThread(threading.Thread):
 		if self.haveRival == True: 
 			#print('already have rival')
 			return True
-		print('waiting for rival')
 		#pindol = random.choice(clients)
 		if len(clients) >= 2:
 			pindol = random.choice(clients)
@@ -102,25 +85,20 @@ class clientThread(threading.Thread):
 	
 	def run(self):
 		print("beginning client thread loop")	
-		if self.findPindol():
-			#print(self.sock.getpeername())
-			data = self.sock.recv(8192)
-			#print(data)
-			if data:
-				print(data)
-				self.rival.sendall(data)
-			#print(result)
-			#decoded = json.loads(data)
-			#x = decoded['x']
-			#y = decoded['y']
-			#makeMove(self.board, self.getRivalTile(self.tile), decoded['x'], decoded['y'])
-			#x, y = getComputerMove(self.board, computerTile)
-			#makeMove(self.board, computerTile, x, y)			
-			#print('wait for server')
-			#time.sleep(5)
-			#print(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
-			#self.rival.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
-				
+		#if self.findPindol():
+		#print(self.sock.getpeername())
+		while self.running:
+			if self.findPindol():
+				data = self.sock.recv(1024)
+				#print(data)
+				if data:
+					print(data)
+					#self.rival.send(data)
+					self.rival.send(data)
+				else:
+					self.sock.close()
+					print('closing socket')
+					self.running = False
 
 ###############
 # old handler
