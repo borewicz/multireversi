@@ -60,12 +60,12 @@ class clientThread(threading.Thread):
 			pindol = random.choice(clients)
 			while (pindol.haveRival == True) or (pindol.sock == self.sock):
 				pindol = random.choice(clients)
+			self.haveRival = True
+			pindol.haveRival = True				
 			self.rival = pindol.sock
 			print(pindol.sock.getpeername())
 			print(self.sock.getpeername())
-			self.haveRival = True
 			pindol.rival = self.sock
-			pindol.haveRival = True
 			self.tile = random.choice([computerTile, playerTile])
 			pindol.tile = self.getRivalTile(self.tile)
 			pindol.sock.send(json.dumps({'tile' : self.tile}, sort_keys=True, indent=4))	
