@@ -1,26 +1,17 @@
 #!/opt/local/bin/python
 from __future__ import print_function
-import asyncore
+#import asyncore
 import socket
 import json
 import sys
 import random
-import time
+#import time
 import threading
-import SocketServer
+#import SocketServer
 
 clients = []
-board = []
-for i in range(8):
-	board.append([' '] * 8)
-board[3][3] = 'X'
-board[3][4] = 'O'
-board[4][3] = 'O'
-board[4][4] = 'X'
 playerTile = 'X'
 computerTile = 'O'
-
-clients = []
 
 class gameServer(object):
 
