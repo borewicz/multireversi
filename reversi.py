@@ -56,7 +56,7 @@ class clientThread(threading.Thread):
 					makeMove(board, getRivalTile(self.tile), x, y)
 					convertBoard(board)
 					scores = getScoreOfBoard(board)					
-					w.setWindowTitle('Your turn, %s. X: %s, O: %s' % (self.tile, scores[self.tile], scores[getRivalTile(self.tile)]))
+					w.setWindowTitle('Your turn, %s. You: %s, Opponent: %s' % (self.tile, scores[self.tile], scores[getRivalTile(self.tile)]))
 
 	def sendMove(self, x, y):
 		if makeMove(board, self.tile, x, y):
@@ -64,7 +64,7 @@ class clientThread(threading.Thread):
 			scores = getScoreOfBoard(board)	
 			result = self.client.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
 			#print('wyjscie %s' % result)
-			w.setWindowTitle('%s has turn.  X: %s, O: %s' % (getRivalTile(self.tile), scores[self.tile], scores[getRivalTile(self.tile)]))
+			w.setWindowTitle('%s has turn. You: %s, Opponent: %s' % (getRivalTile(self.tile), scores[self.tile], scores[getRivalTile(self.tile)]))
 	
 def __init__():
 	super(Reversi, self).__init__()
