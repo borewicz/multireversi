@@ -1,28 +1,28 @@
 #!/opt/local/bin/python
 from __future__ import print_function
 import sys
-#import random
-#import time
 import threading
-#import asyncore
 import socket
 import json
-#import uuid
 from PyQt4 import QtGui, QtCore
 
 showHints = False 
 board = []
 for i in range(8):
 	board.append([' '] * 8)
-board[3][3] = 'X'
-board[3][4] = 'O'
-board[4][3] = 'O'
-board[4][4] = 'X'
 buttonGrid = []
-playerTile = 'X'
-computerTile = 'O'
 app = QtGui.QApplication(sys.argv)
 w = QtGui.QWidget()
+chatBox = QtGui.QTextEdit()
+
+
+def resetBoard():
+	board[3][3] = 'X'
+	board[3][4] = 'O'
+	board[4][3] = 'O'
+	board[4][4] = 'X'
+	
+resetBoard()
 
 def getRivalTile(tile):
 	if tile == 'X':
@@ -46,10 +46,18 @@ class clientThread(threading.Thread):
 		while self.running:			
 			response = self.client.recv(8192)
 			if response:
+				print(response)
 				decoded = json.loads(response)
-				if decoded.get('tile'):
+				if decoded.get('disconnect'):
+					resetBoard()
+					convertBoard(board)
+					w.setWindowTitle('Waiting...')
+				elif decoded.get('tile'):
 					self.tile = decoded['tile']
-					w.setWindowTitle('You are %s' % self.tile)				
+					w.setWindowTitle('You are %s' % self.tile)		
+				elif decoded.get('message'):
+					#chatBox.html.append('\nrival says: %s' % decoded['message'])
+					chatBox.insertPlainText(QtCore.QString('\nrival says: %s' % decoded['message']))
 				else:
 					x = decoded['x']
 					y = decoded['y']
@@ -57,6 +65,10 @@ class clientThread(threading.Thread):
 					convertBoard(board)
 					scores = getScoreOfBoard(board)					
 					w.setWindowTitle('Your turn, %s. You: %s, Opponent: %s' % (self.tile, scores[self.tile], scores[getRivalTile(self.tile)]))
+
+	def sendMessage(self, text):
+		self.client.send(json.dumps({'message' : str(text) }, sort_keys=True, indent=4))
+		chatBox.insertPlainText(QtCore.QString('\you say: %s' % text))
 
 	def sendMove(self, x, y):
 		if makeMove(board, self.tile, x, y):
@@ -150,13 +162,6 @@ def getScoreOfBoard(board):
 				oscore += 1
 	return {'X':xscore, 'O':oscore}
 
-def enterPlayerTile():
-	# the first element in the tuple is the player's tile, the second is the computer's tile.
-	#if tile == 'X':
-		return ['X', 'O']
-	#else:
-		#return ['O', 'X']
-
 def makeMove(board, tile, xstart, ystart):
 	tilesToFlip = isValidMove(board, tile, xstart, ystart)
 
@@ -176,20 +181,9 @@ def isOnCorner(x, y):
 	# Returns True if the position is in one of the four corners.
 	return (x == 0 and y == 0) or (x == 7 and y == 0) or (x == 0 and y == 7) or (x == 7 and y == 7)	
 
-def showPoints(board, tile):
-	scores = getScoreOfBoard(board)
-	if tile == 'X':
-		computerTile = 'O'
-	else:
-		computerTile = 'X'
-
-	w.setWindowTitle('You: %s, Computer: %s' % (scores[tile], scores[computerTile]))
-
 thread = clientThread('localhost')
 
 def main():
-	playerTile, computerTile = enterPlayerTile()
-	
 	grid = QtGui.QGridLayout()
 	for i in range (0, 8):
 		new = []
@@ -205,9 +199,10 @@ def main():
 	
 	chatLayout = QtGui.QVBoxLayout()
 
-	chatBox = QtGui.QTextEdit()
 	enterBox = QtGui.QLineEdit()
 	sendButton = QtGui.QPushButton('Send')
+	QtCore.QObject.connect(sendButton, QtCore.SIGNAL("clicked()"),
+		lambda: thread.sendMessage(enterBox.text()))
 
 	sendBoxLayout = QtGui.QHBoxLayout()
 	sendBoxLayout.addWidget(enterBox)
@@ -223,8 +218,8 @@ def main():
 	w.setLayout(mainLayout)
 
 	convertBoard(board)
-	w.move(300, 150)
-	w.setWindowTitle('REVERSI')
+	#w.move(300, 150)
+	w.setWindowTitle('Waiting...')
 	w.show()
 	thread.daemon = True
 	thread.start()

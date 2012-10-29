@@ -41,6 +41,7 @@ class clientThread(threading.Thread):
 
 	def __init__(self, sock):
 		threading.Thread.__init__(self)
+		self.stop = threading.Event()
 		self.sock = sock
 		self.haveRival = False
 		self.running = True
@@ -57,14 +58,15 @@ class clientThread(threading.Thread):
 			return True
 		#pindol = random.choice(clients)
 		if len(clients) >= 2:
+			print('searching for a rival')
 			pindol = random.choice(clients)
 			while (pindol.haveRival == True) or (pindol.sock == self.sock):
 				pindol = random.choice(clients)
 			self.haveRival = True
 			pindol.haveRival = True				
-			self.rival = pindol.sock
 			print(pindol.sock.getpeername())
 			print(self.sock.getpeername())
+			self.rival = pindol.sock			
 			pindol.rival = self.sock
 			self.tile = random.choice([computerTile, playerTile])
 			pindol.tile = self.getRivalTile(self.tile)
@@ -73,6 +75,16 @@ class clientThread(threading.Thread):
 			print('found rival')
 			return True
 		else: return False
+
+	def disconnect(self):
+		for c in clients:
+			if c.sock == self.rival:
+				print('remoing client')
+				#self.rival.close()				
+				##c.stop.set()
+				#clients.remove(c)
+				self.rival = None
+				self.haveRival = False
 	
 	def run(self):
 		#self.findPindol()
@@ -87,8 +99,15 @@ class clientThread(threading.Thread):
 					print(data)
 					self.rival.send(data)
 				else:
+					#self.rival.send(json.dumps({'disconnect' : 'true'}, sort_keys=True, indent=4))
+					#print('closing socket')
+					#self.rival = None
+					#self.disconnect()
+					#self.findPindol()
+					#self.running = False
 					self.sock.close()
 					print('closing socket')
 					self.running = False
+					
 
 server = gameServer('localhost', 8888)
