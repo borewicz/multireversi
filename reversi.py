@@ -12,11 +12,14 @@ for i in range(8):
 	board.append([' '] * 8)
 buttonGrid = []
 app = QtGui.QApplication(sys.argv)
-w = QtGui.QWidget()
-chatBox = QtGui.QTextEdit()
-
+startWindow = QtGui.QWidget()
+#chatBox = QtGui.QTextEdit()
+nick = 'unknown'
 
 def resetBoard():
+	for i in range(8):
+		for j in range(8):
+			board[i][j] = ' '
 	board[3][3] = 'X'
 	board[3][4] = 'O'
 	board[4][3] = 'O'
@@ -32,14 +35,60 @@ def getRivalTile(tile):
 
 class clientThread(threading.Thread):
 
-	def __init__(self, host):
+	def __init__(self, host, nick):
 		threading.Thread.__init__(self)
+		self._stop = threading.Event()		
 		#self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		#self.client.connect( (host, 8888) )
 		#self.client.setblocking(0)		
 		self.client = socket.create_connection((host, 8888))
 		self.buffer = ''
+		self.nick = nick
 		self.running = True
+		self.chatBox = QtGui.QTextEdit()		
+		self.window = self.createWindow()
+		startWindow.hide()
+		self.window.show()
+
+	def createWindow(self):
+		#convertBoard(board)
+		w = QtGui.QWidget()	
+		grid = QtGui.QGridLayout()
+		for i in range (0, 8):
+			new = []
+			for j in range (0, 8):
+				button = QtGui.QToolButton()
+				button.setMinimumWidth(40)
+				button.setMaximumWidth(40)
+				QtCore.QObject.connect(button, QtCore.SIGNAL("clicked()"), 
+					lambda i=i, j=j: self.sendMove(i, j))
+				new.append(button)
+				grid.addWidget(new[j], i, j)
+			buttonGrid.append(new)
+		
+		chatLayout = QtGui.QVBoxLayout()
+
+		enterBox = QtGui.QLineEdit()
+		sendButton = QtGui.QPushButton('Send')
+		QtCore.QObject.connect(sendButton, QtCore.SIGNAL("clicked()"),
+			lambda: self.sendMessage(enterBox.text()))
+
+		sendBoxLayout = QtGui.QHBoxLayout()
+		sendBoxLayout.addWidget(enterBox)
+		sendBoxLayout.addWidget(sendButton)
+
+		chatLayout.addWidget(self.chatBox)
+		chatLayout.addLayout(sendBoxLayout)
+
+		mainLayout = QtGui.QVBoxLayout()
+		mainLayout.addLayout(grid)
+		mainLayout.addLayout(chatLayout)
+		
+		convertBoard(board)
+		
+		w.setWindowTitle('Waiting...')	
+		w.setLayout(mainLayout)
+		return w
 
 	def run(self):
 		#asyncore.loop()
@@ -51,32 +100,35 @@ class clientThread(threading.Thread):
 				if decoded.get('disconnect'):
 					resetBoard()
 					convertBoard(board)
-					w.setWindowTitle('Waiting...')
+					#.setWindowTitle('Waiting...')
+					#w.hide()
+					startWindow.show()
+					self._stop.set()					
 				elif decoded.get('tile'):
 					self.tile = decoded['tile']
-					w.setWindowTitle('You are %s' % self.tile)		
+					self.window.setWindowTitle('You are %s' % self.tile)		
 				elif decoded.get('message'):
 					#chatBox.html.append('\nrival says: %s' % decoded['message'])
-					chatBox.insertPlainText(QtCore.QString('\nrival says: %s' % decoded['message']))
+					self.chatBox.insertPlainText(QtCore.QString('rival: %s\n' % decoded['message']))
 				else:
 					x = decoded['x']
 					y = decoded['y']
 					makeMove(board, getRivalTile(self.tile), x, y)
 					convertBoard(board)
 					scores = getScoreOfBoard(board)					
-					w.setWindowTitle('Your turn, %s. You: %s, Opponent: %s' % (self.tile, scores[self.tile], scores[getRivalTile(self.tile)]))
+					self.window.setWindowTitle('Your turn, %s. You: %s, Opponent: %s' % (self.tile, scores[self.tile], scores[getRivalTile(self.tile)]))
 
 	def sendMessage(self, text):
 		self.client.send(json.dumps({'message' : str(text) }, sort_keys=True, indent=4))
-		chatBox.insertPlainText(QtCore.QString('\nyou say: %s' % text))
+		self.chatBox.insertPlainText(QtCore.QString('you: %s\n' % text))
 
 	def sendMove(self, x, y):
 		if makeMove(board, self.tile, x, y):
 			convertBoard(board)			
 			scores = getScoreOfBoard(board)	
-			result = self.client.send(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
+			result = self.client.sendall(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
 			#print('wyjscie %s' % result)
-			w.setWindowTitle('%s has turn. You: %s, Opponent: %s' % (getRivalTile(self.tile), scores[self.tile], scores[getRivalTile(self.tile)]))
+			self.window.setWindowTitle('%s has turn. You: %s, Opponent: %s' % (getRivalTile(self.tile), scores[self.tile], scores[getRivalTile(self.tile)]))
 	
 def __init__():
 	super(Reversi, self).__init__()
@@ -181,48 +233,30 @@ def isOnCorner(x, y):
 	# Returns True if the position is in one of the four corners.
 	return (x == 0 and y == 0) or (x == 7 and y == 0) or (x == 0 and y == 7) or (x == 7 and y == 7)	
 
-thread = clientThread('localhost')
-
-def main():
-	grid = QtGui.QGridLayout()
-	for i in range (0, 8):
-		new = []
-		for j in range (0, 8):
-			button = QtGui.QToolButton()
-			button.setMinimumWidth(40)
-			button.setMaximumWidth(40)
-			QtCore.QObject.connect(button, QtCore.SIGNAL("clicked()"), 
-				lambda i=i, j=j: thread.sendMove(i, j))
-			new.append(button)
-			grid.addWidget(new[j], i, j)
-		buttonGrid.append(new)
-	
-	chatLayout = QtGui.QVBoxLayout()
-
-	enterBox = QtGui.QLineEdit()
-	sendButton = QtGui.QPushButton('Send')
-	QtCore.QObject.connect(sendButton, QtCore.SIGNAL("clicked()"),
-		lambda: thread.sendMessage(enterBox.text()))
-
-	sendBoxLayout = QtGui.QHBoxLayout()
-	sendBoxLayout.addWidget(enterBox)
-	sendBoxLayout.addWidget(sendButton)
-
-	chatLayout.addWidget(chatBox)
-	chatLayout.addLayout(sendBoxLayout)
-
-	mainLayout = QtGui.QVBoxLayout()
-	mainLayout.addLayout(grid)
-	mainLayout.addLayout(chatLayout)
-	
-	w.setLayout(mainLayout)
-
-	convertBoard(board)
-	#w.move(300, 150)
-	w.setWindowTitle('Waiting...')
-	w.show()
+def createThread(nick):
+	thread = clientThread('localhost', nick)
 	thread.daemon = True
 	thread.start()
+
+def showSplash():
+	nickLabel = QtGui.QLabel('Nickname:')
+	nickBox = QtGui.QLineEdit()
+	connectButton = QtGui.QPushButton('Connect')
+	QtCore.QObject.connect(connectButton, QtCore.SIGNAL("clicked()"), 
+				lambda: createThread(str(nickBox.text())))
+	dialogLayout = QtGui.QHBoxLayout()
+	dialogLayout.addWidget(nickLabel)
+	dialogLayout.addWidget(nickBox)
+	
+	mainDialogLayout = QtGui.QVBoxLayout()
+	mainDialogLayout.addLayout(dialogLayout)
+	mainDialogLayout.addWidget(connectButton)
+
+	startWindow.setLayout(mainDialogLayout)
+
+def main():
+	showSplash()
+	startWindow.show()		
 	sys.exit(app.exec_())
 
 if __name__ == '__main__':

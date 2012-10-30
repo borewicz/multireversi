@@ -20,7 +20,7 @@ class gameServer(object):
 		try:
 			self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.server.bind((host, port))
-			self.server.listen(1)
+			self.server.listen(5)
 			self.running = True
 			while self.running:
 				try:
@@ -31,8 +31,8 @@ class gameServer(object):
 					thread.start()
 				except KeyboardInterrupt:
 					print('parent received control-c')
-					self.running = False
 					self.server.close()
+					self.running = False
 		except socket.error, (value,message): 
 			if self.server: 
 				self.server.close() 
@@ -59,15 +59,14 @@ class clientThread(threading.Thread):
 			return True
 		#pindol = random.choice(clients)
 		if len(clients) >= 2:
-			#print('searching for a rival')
 			pindol = random.choice(clients)
 			while (pindol.haveRival == True) or (pindol.sock == self.sock):
 				pindol = random.choice(clients)
 			self.haveRival = True
 			pindol.haveRival = True				
+			self.rival = pindol.sock
 			print(pindol.sock.getpeername())
 			print(self.sock.getpeername())
-			self.rival = pindol.sock			
 			pindol.rival = self.sock
 			self.tile = random.choice([computerTile, playerTile])
 			pindol.tile = self.getRivalTile(self.tile)
@@ -76,30 +75,20 @@ class clientThread(threading.Thread):
 			print('found rival')
 			return True
 		else: return False
-
+	
 	def run(self):
-		#self.findPindol()
-		print("beginning client thread loop")	
-		#if self.findPindol():
-		#print(self.sock.getpeername())
-		#if self.findPindol():		
 		while self.running:
-			#print('self.running = true')
-			while self.findPindol():
-				data = self.sock.recv(1024)
+			if self.findPindol():
+				data = self.sock.recv(8192)
 				if data:
 					print(data)
-					self.rival.send(data)
+					self.rival.sendall(data)
 				else:
-					#self.rival.send(json.dumps({'disconnect' : 'true'}, sort_keys=True, indent=4))
-					#print('closing socket')
-					#self.rival = None
-					#self.disconnect()
-					#self.findPindol()
-					#self.running = False
+					self.rival.sendall(json.dumps({'disconnect' : 'true'}, sort_keys=True, indent=4))
 					self.sock.close()
+					self.rival.close()
 					print('closing socket')
 					self.running = False
-					
 
 server = gameServer('localhost', 8888)
+
