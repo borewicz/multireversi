@@ -32,6 +32,7 @@ class gameServer(object):
 				except KeyboardInterrupt:
 					print('parent received control-c')
 					self.running = False
+					self.server.close()
 		except socket.error, (value,message): 
 			if self.server: 
 				self.server.close() 
@@ -58,7 +59,7 @@ class clientThread(threading.Thread):
 			return True
 		#pindol = random.choice(clients)
 		if len(clients) >= 2:
-			print('searching for a rival')
+			#print('searching for a rival')
 			pindol = random.choice(clients)
 			while (pindol.haveRival == True) or (pindol.sock == self.sock):
 				pindol = random.choice(clients)
@@ -76,16 +77,6 @@ class clientThread(threading.Thread):
 			return True
 		else: return False
 
-	def disconnect(self):
-		for c in clients:
-			if c.sock == self.rival:
-				print('remoing client')
-				#self.rival.close()				
-				##c.stop.set()
-				#clients.remove(c)
-				self.rival = None
-				self.haveRival = False
-	
 	def run(self):
 		#self.findPindol()
 		print("beginning client thread loop")	
@@ -93,7 +84,8 @@ class clientThread(threading.Thread):
 		#print(self.sock.getpeername())
 		#if self.findPindol():		
 		while self.running:
-			if self.findPindol():
+			#print('self.running = true')
+			while self.findPindol():
 				data = self.sock.recv(1024)
 				if data:
 					print(data)

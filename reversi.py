@@ -68,7 +68,7 @@ class clientThread(threading.Thread):
 
 	def sendMessage(self, text):
 		self.client.send(json.dumps({'message' : str(text) }, sort_keys=True, indent=4))
-		chatBox.insertPlainText(QtCore.QString('\you say: %s' % text))
+		chatBox.insertPlainText(QtCore.QString('\nyou say: %s' % text))
 
 	def sendMove(self, x, y):
 		if makeMove(board, self.tile, x, y):
