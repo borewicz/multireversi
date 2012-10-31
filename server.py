@@ -26,7 +26,7 @@ class gameServer(object):
 				try:
 					client = self.server.accept()
 					thread = clientThread(client[0])
-					thread.daemon = True
+					#thread.daemon = True
 					clients.append(thread)
 					thread.start()
 				except KeyboardInterrupt:
@@ -42,10 +42,10 @@ class clientThread(threading.Thread):
 
 	def __init__(self, sock):
 		threading.Thread.__init__(self)
-		self.stop = threading.Event()
 		self.sock = sock
 		self.haveRival = False
 		self.running = True
+		self._stop = threading.Event()				
 
 	def getRivalTile(self, tile):
 		if tile == 'X':
@@ -63,15 +63,18 @@ class clientThread(threading.Thread):
 			while (pindol.haveRival == True) or (pindol.sock == self.sock):
 				pindol = random.choice(clients)
 			self.haveRival = True
-			pindol.haveRival = True				
-			self.rival = pindol.sock
-			print(pindol.sock.getpeername())
-			print(self.sock.getpeername())
-			pindol.rival = self.sock
+			self.rivalID = clients.index(pindol)						
+			clients[self.rivalID].haveRival = True
+			clients[self.rivalID].rivalID = clients.index(self)
+			#pindol.haveRival = True				
+			#self.rival = pindol.sock
+			#print(pindol.sock.getpeername())
+			#print(self.sock.getpeername())
+			#pindol.rival = self.sock
 			self.tile = random.choice([computerTile, playerTile])
-			pindol.tile = self.getRivalTile(self.tile)
-			pindol.sock.send(json.dumps({'tile' : self.tile}, sort_keys=True, indent=4))	
-			self.sock.send(json.dumps({'tile' : pindol.tile}, sort_keys=True, indent=4))
+			clients[self.rivalID].tile = self.getRivalTile(self.tile)
+			clients[self.rivalID].sock.send(json.dumps({'tile' : self.tile}, sort_keys=True, indent=4))	
+			self.sock.send(json.dumps({'tile' : clients[self.rivalID].tile}, sort_keys=True, indent=4))
 			print('found rival')
 			return True
 		else: return False
@@ -79,16 +82,26 @@ class clientThread(threading.Thread):
 	def run(self):
 		while self.running:
 			if self.findPindol():
-				data = self.sock.recv(8192)
+				data = self.sock.recv(1024)
 				if data:
 					print(data)
-					self.rival.sendall(data)
+					sent = clients[self.rivalID].sock.send(data)
+					if sent == 0:
+						raise RuntimeError("socket connection broken, error: %s" % str(sent))
+
 				else:
-					self.rival.sendall(json.dumps({'disconnect' : 'true'}, sort_keys=True, indent=4))
+					#self.rival.send(json.dumps({'disconnect' : 'true'}, sort_keys=True, indent=4))
 					self.sock.close()
-					self.rival.close()
+					#clients[self.rivalID].sock.close()
 					print('closing socket')
 					self.running = False
+					self._stop.set()
+					for c in clients:
+						if self.sock == c.sock:
+							clients.remove(c)
+					del self
+					return
+					
 
 server = gameServer('localhost', 8888)
 

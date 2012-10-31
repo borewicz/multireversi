@@ -44,6 +44,7 @@ class clientThread(threading.Thread):
 		self.client = socket.create_connection((host, 8888))
 		self.buffer = ''
 		self.nick = nick
+		#self.rival = 'unknown'
 		self.running = True
 		self.chatBox = QtGui.QTextEdit()		
 		self.window = self.createWindow()
@@ -92,8 +93,9 @@ class clientThread(threading.Thread):
 
 	def run(self):
 		#asyncore.loop()
+		#self.client.send(json.dumps({'nick' : str(self.nick) }, sort_keys=True, indent=4))		
 		while self.running:			
-			response = self.client.recv(8192)
+			response = self.client.recv(1024)
 			if response:
 				print(response)
 				decoded = json.loads(response)
@@ -109,7 +111,9 @@ class clientThread(threading.Thread):
 					self.window.setWindowTitle('You are %s' % self.tile)		
 				elif decoded.get('message'):
 					#chatBox.html.append('\nrival says: %s' % decoded['message'])
-					self.chatBox.insertPlainText(QtCore.QString('rival: %s\n' % decoded['message']))
+					self.chatBox.insertPlainText(QtCore.QString('%s: %s\n' % (decoded['nick'], decoded['message'])))
+				#elif decoded.get('nick'):
+					#self.rival = decoded['nick']
 				else:
 					x = decoded['x']
 					y = decoded['y']
@@ -117,17 +121,22 @@ class clientThread(threading.Thread):
 					convertBoard(board)
 					scores = getScoreOfBoard(board)					
 					self.window.setWindowTitle('Your turn, %s. You: %s, Opponent: %s' % (self.tile, scores[self.tile], scores[getRivalTile(self.tile)]))
+			else:
+				self.sock.close()
+				self.running = False
+				self._stop.set()
+				del self
+				return
 
 	def sendMessage(self, text):
-		self.client.send(json.dumps({'message' : str(text) }, sort_keys=True, indent=4))
-		self.chatBox.insertPlainText(QtCore.QString('you: %s\n' % text))
+		self.client.send(json.dumps({'message' : str(text), 'nick' : self.nick }, sort_keys=True, indent=4))
+		self.chatBox.insertPlainText(QtCore.QString('%s: %s\n' % (self.nick, text)))
 
 	def sendMove(self, x, y):
 		if makeMove(board, self.tile, x, y):
 			convertBoard(board)			
 			scores = getScoreOfBoard(board)	
 			result = self.client.sendall(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
-			#print('wyjscie %s' % result)
 			self.window.setWindowTitle('%s has turn. You: %s, Opponent: %s' % (getRivalTile(self.tile), scores[self.tile], scores[getRivalTile(self.tile)]))
 	
 def __init__():
@@ -142,12 +151,10 @@ def convertBoard(board):
 				pass	
 
 def isValidMove(board, tile, xstart, ystart):
-	# Returns False if the player's move on space xstart, ystart is invalid.
-	# If it is a valid move, returns a list of spaces that would become the player's if they made a move here.
 	if board[xstart][ystart] != ' ' or not isOnBoard(xstart, ystart):
 		return False
 
-	board[xstart][ystart] = tile # temporarily set the tile on the board.
+	board[xstart][ystart] = tile 
 
 	if tile == 'X':
 		otherTile = 'O'
@@ -157,10 +164,9 @@ def isValidMove(board, tile, xstart, ystart):
 	tilesToFlip = []
 	for xdirection, ydirection in [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]]:
 		x, y = xstart, ystart
-		x += xdirection # first step in the direction
-		y += ydirection # first step in the direction
+		x += xdirection
+		y += ydirection 
 		if isOnBoard(x, y) and board[x][y] == otherTile:
-			# There is a piece belonging to the other player next to our piece.
 			x += xdirection
 			y += ydirection
 			if not isOnBoard(x, y):
@@ -168,12 +174,11 @@ def isValidMove(board, tile, xstart, ystart):
 			while board[x][y] == otherTile:
 				x += xdirection
 				y += ydirection
-				if not isOnBoard(x, y): # break out of while loop, then continue in for loop
+				if not isOnBoard(x, y): 
 					break
 			if not isOnBoard(x, y):
 				continue
 			if board[x][y] == tile:
-				# There are pieces to flip over. Go in the reverse direction until we reach the original space, noting all the tiles along the way.
 				while True:
 					x -= xdirection
 					y -= ydirection
@@ -181,18 +186,16 @@ def isValidMove(board, tile, xstart, ystart):
 						break
 					tilesToFlip.append([x, y])
 
-	board[xstart][ystart] = ' ' # restore the empty space
-	if len(tilesToFlip) == 0: # If no tiles were flipped, this is not a valid move.
+	board[xstart][ystart] = ' ' 
+	if len(tilesToFlip) == 0: 
 		return False
 	return tilesToFlip
 
 
 def isOnBoard(x, y):
-	# Returns True if the coordinates are located on the board.
 	return x >= 0 and x <= 7 and y >= 0 and y <=7
 
 def getValidMoves(board, tile):
-	# Returns a list of [x,y] lists of valid moves for the given player on the given board.
 	validMoves = []
 
 	for x in range(8):
@@ -203,7 +206,6 @@ def getValidMoves(board, tile):
 
 
 def getScoreOfBoard(board):
-	# Determine the score by counting the tiles. Returns a dictionary with keys 'X' and 'O'.
 	xscore = 0
 	oscore = 0
 	for x in range(8):
@@ -217,12 +219,9 @@ def getScoreOfBoard(board):
 def makeMove(board, tile, xstart, ystart):
 	tilesToFlip = isValidMove(board, tile, xstart, ystart)
 
-	#print(tilesToFlip)
-
 	if tilesToFlip == False:
 		return False
 
-	#print 'true'
 	board[xstart][ystart] = tile
 	for x, y in tilesToFlip:
 		board[x][y] = tile
@@ -230,7 +229,6 @@ def makeMove(board, tile, xstart, ystart):
 	return True
 
 def isOnCorner(x, y):
-	# Returns True if the position is in one of the four corners.
 	return (x == 0 and y == 0) or (x == 7 and y == 0) or (x == 0 and y == 7) or (x == 7 and y == 7)	
 
 def createThread(nick):
