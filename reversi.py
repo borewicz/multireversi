@@ -14,7 +14,6 @@ buttonGrid = []
 app = QtGui.QApplication(sys.argv)
 startWindow = QtGui.QWidget()
 #chatBox = QtGui.QTextEdit()
-nick = 'unknown'
 
 def resetBoard():
 	for i in range(8):
@@ -43,10 +42,15 @@ class clientThread(threading.Thread):
 		#self.client.setblocking(0)		
 		self.client = socket.create_connection((host, 8888))
 		self.buffer = ''
-		self.nick = nick
+		if nick != '':
+			self.nick = nick
+		else:
+			self.nick = 'anon'
 		#self.rival = 'unknown'
 		self.running = True
 		self.chatBox = QtGui.QTextEdit()		
+		self.chatBox.setReadOnly(True)
+		self.enterBox = QtGui.QLineEdit()
 		self.window = self.createWindow()
 		startWindow.hide()
 		self.window.show()
@@ -69,13 +73,14 @@ class clientThread(threading.Thread):
 		
 		chatLayout = QtGui.QVBoxLayout()
 
-		enterBox = QtGui.QLineEdit()
+		#enterBox = QtGui.QLineEdit()
 		sendButton = QtGui.QPushButton('Send')
 		QtCore.QObject.connect(sendButton, QtCore.SIGNAL("clicked()"),
-			lambda: self.sendMessage(enterBox.text()))
+			lambda: self.sendMessage(self.enterBox.text()))
+		QtCore.QObject.connect(self.enterBox, QtCore.SIGNAL("returnPressed()"), sendButton, QtCore.SIGNAL("clicked()"))
 
 		sendBoxLayout = QtGui.QHBoxLayout()
-		sendBoxLayout.addWidget(enterBox)
+		sendBoxLayout.addWidget(self.enterBox)
 		sendBoxLayout.addWidget(sendButton)
 
 		chatLayout.addWidget(self.chatBox)
@@ -93,7 +98,6 @@ class clientThread(threading.Thread):
 
 	def run(self):
 		#asyncore.loop()
-		#self.client.send(json.dumps({'nick' : str(self.nick) }, sort_keys=True, indent=4))		
 		while self.running:			
 			response = self.client.recv(1024)
 			if response:
@@ -110,10 +114,10 @@ class clientThread(threading.Thread):
 					self.tile = decoded['tile']
 					self.window.setWindowTitle('You are %s' % self.tile)		
 				elif decoded.get('message'):
-					#chatBox.html.append('\nrival says: %s' % decoded['message'])
 					self.chatBox.insertPlainText(QtCore.QString('%s: %s\n' % (decoded['nick'], decoded['message'])))
-				#elif decoded.get('nick'):
-					#self.rival = decoded['nick']
+					cursor = self.chatBox.textCursor()
+					cursor.movePosition(QtGui.QTextCursor.End)
+					self.chatBox.setTextCursor(cursor)
 				else:
 					x = decoded['x']
 					y = decoded['y']
@@ -121,16 +125,14 @@ class clientThread(threading.Thread):
 					convertBoard(board)
 					scores = getScoreOfBoard(board)					
 					self.window.setWindowTitle('Your turn, %s. You: %s, Opponent: %s' % (self.tile, scores[self.tile], scores[getRivalTile(self.tile)]))
-			else:
-				self.sock.close()
-				self.running = False
-				self._stop.set()
-				del self
-				return
 
 	def sendMessage(self, text):
 		self.client.send(json.dumps({'message' : str(text), 'nick' : self.nick }, sort_keys=True, indent=4))
 		self.chatBox.insertPlainText(QtCore.QString('%s: %s\n' % (self.nick, text)))
+		cursor = self.chatBox.textCursor()
+		cursor.movePosition(QtGui.QTextCursor.End)
+		self.chatBox.setTextCursor(cursor)
+		self.enterBox.clear()
 
 	def sendMove(self, x, y):
 		if makeMove(board, self.tile, x, y):
@@ -242,6 +244,8 @@ def showSplash():
 	connectButton = QtGui.QPushButton('Connect')
 	QtCore.QObject.connect(connectButton, QtCore.SIGNAL("clicked()"), 
 				lambda: createThread(str(nickBox.text())))
+
+	QtCore.QObject.connect(nickBox, QtCore.SIGNAL("returnPressed()"), connectButton, QtCore.SIGNAL("clicked()"))	
 	dialogLayout = QtGui.QHBoxLayout()
 	dialogLayout.addWidget(nickLabel)
 	dialogLayout.addWidget(nickBox)
