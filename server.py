@@ -95,12 +95,12 @@ class clientThread(threading.Thread):
 					#clients[self.rivalID].sock.close()
 					print('closing socket')
 					self.running = False
-					self._stop.set()
-					for c in clients:
-						if self.sock == c.sock:
-							clients.remove(c)
-					del self
-					return
+					#self._stop.set()
+					#for c in clients:
+						#if self.sock == c.sock:
+							#clients.remove(c)
+					#del self
+					#return
 					
 
 server = gameServer('localhost', 8888)

@@ -55,6 +55,19 @@ class clientThread(threading.Thread):
 		startWindow.hide()
 		self.window.show()
 
+	def convertBoard(self, board):
+		for x in range(8):
+			for y in range(8):
+				try:
+					if board[x][y] == 'X':
+						buttonGrid[x][y].setIcon(QtGui.QIcon('white.png'))
+					elif board[x][y] == 'O':
+						buttonGrid[x][y].setIcon(QtGui.QIcon('black.png'))
+					else:
+						buttonGrid[x][y].setIcon(QtGui.QIcon('null.png'))
+				except:
+					pass	
+
 	def createWindow(self):
 		#convertBoard(board)
 		w = QtGui.QWidget()	
@@ -63,8 +76,11 @@ class clientThread(threading.Thread):
 			new = []
 			for j in range (0, 8):
 				button = QtGui.QToolButton()
-				button.setMinimumWidth(40)
-				button.setMaximumWidth(40)
+				button.setMinimumWidth(46)
+				button.setMaximumWidth(46)
+				button.setIcon(QtGui.QIcon('null.png'));
+				button.setIconSize(QtCore.QSize(46, 46));
+
 				QtCore.QObject.connect(button, QtCore.SIGNAL("clicked()"), 
 					lambda i=i, j=j: self.sendMove(i, j))
 				new.append(button)
@@ -90,7 +106,7 @@ class clientThread(threading.Thread):
 		mainLayout.addLayout(grid)
 		mainLayout.addLayout(chatLayout)
 		
-		convertBoard(board)
+		self.convertBoard(board)
 		
 		w.setWindowTitle('Waiting...')	
 		w.setLayout(mainLayout)
@@ -105,7 +121,7 @@ class clientThread(threading.Thread):
 				decoded = json.loads(response)
 				if decoded.get('disconnect'):
 					resetBoard()
-					convertBoard(board)
+					self.convertBoard(board)
 					#.setWindowTitle('Waiting...')
 					#w.hide()
 					startWindow.show()
@@ -122,12 +138,12 @@ class clientThread(threading.Thread):
 					x = decoded['x']
 					y = decoded['y']
 					makeMove(board, getRivalTile(self.tile), x, y)
-					convertBoard(board)
+					self.convertBoard(board)
 					scores = getScoreOfBoard(board)					
 					self.window.setWindowTitle('Your turn, %s. You: %s, Opponent: %s' % (self.tile, scores[self.tile], scores[getRivalTile(self.tile)]))
 
 	def sendMessage(self, text):
-		self.client.send(json.dumps({'message' : str(text), 'nick' : self.nick }, sort_keys=True, indent=4))
+		self.client.send(json.dumps({'message' : unicode(text), 'nick' : self.nick }, sort_keys=True, indent=4))
 		self.chatBox.insertPlainText(QtCore.QString('%s: %s\n' % (self.nick, text)))
 		cursor = self.chatBox.textCursor()
 		cursor.movePosition(QtGui.QTextCursor.End)
@@ -136,7 +152,7 @@ class clientThread(threading.Thread):
 
 	def sendMove(self, x, y):
 		if makeMove(board, self.tile, x, y):
-			convertBoard(board)			
+			self.convertBoard(board)			
 			scores = getScoreOfBoard(board)	
 			result = self.client.sendall(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
 			self.window.setWindowTitle('%s has turn. You: %s, Opponent: %s' % (getRivalTile(self.tile), scores[self.tile], scores[getRivalTile(self.tile)]))
@@ -144,13 +160,7 @@ class clientThread(threading.Thread):
 def __init__():
 	super(Reversi, self).__init__()
 
-def convertBoard(board):
-	for x in range(8):
-		for y in range(8):
-			try:
-				buttonGrid[x][y].setText(board[x][y])
-			except:
-				pass	
+
 
 def isValidMove(board, tile, xstart, ystart):
 	if board[xstart][ystart] != ' ' or not isOnBoard(xstart, ystart):
@@ -243,7 +253,7 @@ def showSplash():
 	nickBox = QtGui.QLineEdit()
 	connectButton = QtGui.QPushButton('Connect')
 	QtCore.QObject.connect(connectButton, QtCore.SIGNAL("clicked()"), 
-				lambda: createThread(str(nickBox.text())))
+				lambda: createThread(unicode(nickBox.text())))
 
 	QtCore.QObject.connect(nickBox, QtCore.SIGNAL("returnPressed()"), connectButton, QtCore.SIGNAL("clicked()"))	
 	dialogLayout = QtGui.QHBoxLayout()
