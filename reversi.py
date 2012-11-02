@@ -71,6 +71,11 @@ class clientThread(threading.Thread):
 	def createWindow(self):
 		#convertBoard(board)
 		w = QtGui.QWidget()	
+		p = QtGui.QPalette()
+   		p.setColor(QtGui.QPalette.Background, QtGui.QColor(0, 100, 0, 127))	
+   		#w.setAutoFillBackground(True);
+  		w.setPalette(p);
+		
 		#w.setStyleSheet('background-color:green;')	
 		grid = QtGui.QGridLayout()
 		grid.setSpacing(0)
