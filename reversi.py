@@ -71,15 +71,23 @@ class clientThread(threading.Thread):
 	def createWindow(self):
 		#convertBoard(board)
 		w = QtGui.QWidget()	
+		#w.setStyleSheet('background-color:green;')	
 		grid = QtGui.QGridLayout()
+		grid.setSpacing(0)
 		for i in range (0, 8):
 			new = []
 			for j in range (0, 8):
-				button = QtGui.QToolButton()
-				button.setMinimumWidth(46)
-				button.setMaximumWidth(46)
+				button = QtGui.QPushButton()
+				button.setMinimumSize(46, 46)
+				button.setMaximumSize(46, 46)
+				button.setFlat(True)
+				button.setAutoFillBackground(True);
 				button.setIcon(QtGui.QIcon('null.png'));
 				button.setIconSize(QtCore.QSize(46, 46));
+				button.setStyleSheet(""
+						 "background-repeat: no-repeat;"
+						 "background-position: center center");
+				
 
 				QtCore.QObject.connect(button, QtCore.SIGNAL("clicked()"), 
 					lambda i=i, j=j: self.sendMove(i, j))
@@ -93,12 +101,15 @@ class clientThread(threading.Thread):
 		sendButton = QtGui.QPushButton('Send')
 		QtCore.QObject.connect(sendButton, QtCore.SIGNAL("clicked()"),
 			lambda: self.sendMessage(self.enterBox.text()))
-		QtCore.QObject.connect(self.enterBox, QtCore.SIGNAL("returnPressed()"), sendButton, QtCore.SIGNAL("clicked()"))
+		#QtCore.QObject.connect(self.enterBox, QtCore.SIGNAL("returnPressed()"), sendButton, QtCore.SIGNAL("clicked()"))
+		QtCore.QObject.connect(self.enterBox, QtCore.SIGNAL("returnPressed()"),
+			lambda: self.sendMessage(self.enterBox.text()))
 
 		sendBoxLayout = QtGui.QHBoxLayout()
 		sendBoxLayout.addWidget(self.enterBox)
-		sendBoxLayout.addWidget(sendButton)
+		#sendBoxLayout.addWidget(sendButton)
 
+		chatLayout.setSpacing(5)
 		chatLayout.addWidget(self.chatBox)
 		chatLayout.addLayout(sendBoxLayout)
 
