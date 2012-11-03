@@ -32,6 +32,13 @@ def getRivalTile(tile):
 	else:
 		return 'X'
 
+def returnName(tile):
+	if tile == 'X':
+		return 'White'
+	else:
+		return 'Black'
+
+
 class clientThread(threading.Thread):
 
 	def __init__(self, host, nick):
@@ -51,14 +58,14 @@ class clientThread(threading.Thread):
 		self.chatBox = QtGui.QTextEdit()		
 		self.chatBox.setReadOnly(True)
 		self.enterBox = QtGui.QLineEdit()
-		self.window = self.createWindow()
+		self.window = self.createWindow()		
 		startWindow.hide()
 		self.window.show()
 
 	def convertBoard(self, board):
 		for x in range(8):
 			for y in range(8):
-				try:
+				try:				
 					if board[x][y] == 'X':
 						buttonGrid[x][y].setIcon(QtGui.QIcon('white.png'))
 					elif board[x][y] == 'O':
@@ -67,6 +74,11 @@ class clientThread(threading.Thread):
 						buttonGrid[x][y].setIcon(QtGui.QIcon('null.png'))
 				except:
 					pass	
+
+	def setEnabled(self, enabled):
+		for x in range(8):
+			for y in range(8):
+				buttonGrid[x][y].setEnabled(enabled)
 
 	def createWindow(self):
 		#convertBoard(board)
@@ -78,7 +90,9 @@ class clientThread(threading.Thread):
 		
 		#w.setStyleSheet('background-color:green;')	
 		grid = QtGui.QGridLayout()
+		#grid.setEnabled(False)
 		grid.setSpacing(0)
+		#grid.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
 		for i in range (0, 8):
 			new = []
 			for j in range (0, 8):
@@ -86,6 +100,7 @@ class clientThread(threading.Thread):
 				button.setMinimumSize(46, 46)
 				button.setMaximumSize(46, 46)
 				button.setFlat(True)
+				button.setEnabled(False)
 				button.setAutoFillBackground(True);
 				button.setIcon(QtGui.QIcon('null.png'));
 				button.setIconSize(QtCore.QSize(46, 46));
@@ -144,7 +159,12 @@ class clientThread(threading.Thread):
 					self._stop.set()					
 				elif decoded.get('tile'):
 					self.tile = decoded['tile']
-					self.window.setWindowTitle('You are %s' % self.tile)		
+					#self.window.setWindowTitle('You are %s' % self.tile)
+					if self.tile == 'X':
+						self.setEnabled(True)
+					else:
+						self.setEnabled(False)
+					self.chatBox.insertPlainText(QtCore.QString('You are %s.\n' % returnName(self.tile)))
 				elif decoded.get('message'):
 					self.chatBox.insertPlainText(QtCore.QString('%s: %s\n' % (decoded['nick'], decoded['message'])))
 					cursor = self.chatBox.textCursor()
@@ -156,7 +176,8 @@ class clientThread(threading.Thread):
 					makeMove(board, getRivalTile(self.tile), x, y)
 					self.convertBoard(board)
 					scores = getScoreOfBoard(board)					
-					self.window.setWindowTitle('Your turn, %s. You: %s, Opponent: %s' % (self.tile, scores[self.tile], scores[getRivalTile(self.tile)]))
+					self.window.setWindowTitle('You: %s, Opponent: %s' % (scores[self.tile], scores[getRivalTile(self.tile)]))
+					self.setEnabled(True)
 
 	def sendMessage(self, text):
 		self.client.send(json.dumps({'message' : unicode(text), 'nick' : self.nick }, sort_keys=True, indent=4))
@@ -171,7 +192,9 @@ class clientThread(threading.Thread):
 			self.convertBoard(board)			
 			scores = getScoreOfBoard(board)	
 			result = self.client.sendall(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
-			self.window.setWindowTitle('%s has turn. You: %s, Opponent: %s' % (getRivalTile(self.tile), scores[self.tile], scores[getRivalTile(self.tile)]))
+			self.window.setWindowTitle('You: %s, Opponent: %s' % (scores[self.tile], scores[getRivalTile(self.tile)]))
+			self.setEnabled(False)
+			
 	
 def __init__():
 	super(Reversi, self).__init__()

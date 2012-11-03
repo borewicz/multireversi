@@ -16,6 +16,7 @@ computerTile = 'O'
 class gameServer(object):
 
 	def __init__(self, host, port):
+		self._stop = threading.Event()					
 		print('gameServer init')
 		try:
 			self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -33,6 +34,7 @@ class gameServer(object):
 					print('parent received control-c')
 					self.server.close()
 					self.running = False
+					self._stop.set()
 		except socket.error, (value,message): 
 			if self.server: 
 				self.server.close() 
@@ -92,7 +94,7 @@ class clientThread(threading.Thread):
 				else:
 					#self.rival.send(json.dumps({'disconnect' : 'true'}, sort_keys=True, indent=4))
 					self.sock.close()
-					#clients[self.rivalID].sock.close()
+					clients[self.rivalID].sock.close()
 					print('closing socket')
 					self.running = False
 					#self._stop.set()
@@ -100,7 +102,7 @@ class clientThread(threading.Thread):
 						#if self.sock == c.sock:
 							#clients.remove(c)
 					#del self
-					#return
+					return
 					
 
 server = gameServer('localhost', 8888)
