@@ -90,19 +90,11 @@ class clientThread(threading.Thread):
 					sent = clients[self.rivalID].sock.send(data)
 					if sent == 0:
 						raise RuntimeError("socket connection broken, error: %s" % str(sent))
-
 				else:
-					#self.rival.send(json.dumps({'disconnect' : 'true'}, sort_keys=True, indent=4))
 					self.sock.close()
-					clients[self.rivalID].sock.close()
+					#clients[self.rivalID].sock.close()
 					print('closing socket')
 					self.running = False
-					#self._stop.set()
-					#for c in clients:
-						#if self.sock == c.sock:
-							#clients.remove(c)
-					#del self
-					return
 					
 
 server = gameServer('localhost', 8888)

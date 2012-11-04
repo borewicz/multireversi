@@ -58,7 +58,9 @@ class clientThread(threading.Thread):
 		self.chatBox = QtGui.QTextEdit()		
 		self.chatBox.setReadOnly(True)
 		self.enterBox = QtGui.QLineEdit()
-		self.window = self.createWindow()		
+		self.blackLabel = QtGui.QLabel('2')
+		self.whiteLabel = QtGui.QLabel('2')
+		self.window = self.createWindow()				
 		startWindow.hide()
 		self.window.show()
 
@@ -84,9 +86,9 @@ class clientThread(threading.Thread):
 		#convertBoard(board)
 		w = QtGui.QWidget()	
 		p = QtGui.QPalette()
-   		p.setColor(QtGui.QPalette.Background, QtGui.QColor(0, 100, 0, 127))	
-   		#w.setAutoFillBackground(True);
-  		w.setPalette(p);
+		p.setColor(QtGui.QPalette.Background, QtGui.QColor(0, 100, 0, 127))	
+		#w.setAutoFillBackground(True);
+		w.setPalette(p);
 		
 		#w.setStyleSheet('background-color:green;')	
 		grid = QtGui.QGridLayout()
@@ -115,6 +117,58 @@ class clientThread(threading.Thread):
 				grid.addWidget(new[j], i, j)
 			buttonGrid.append(new)
 		
+		colorPalette = QtGui.QPalette()
+		colorPalette.setColor(QtGui.QPalette.Background, QtGui.QColor(50, 68, 43, 0))
+		
+		whitePointLayout = QtGui.QHBoxLayout()
+		#whitePointLayout.setSpacing(0)
+		
+		whiteIcon = QtGui.QLabel()
+		whiteIcon.setPixmap(QtGui.QPixmap('white_small.png'))
+		whiteIcon.setGeometry(QtCore.QRect(0, 0, 20, 20))	
+
+		policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+		#policy.setHeightForWidth(True)
+		#policy.setWidthForHeight(True)
+		policy.setHorizontalStretch(0)
+		policy.setVerticalStretch(0)
+		policy.setHeightForWidth(whiteIcon.sizePolicy().hasHeightForWidth())
+
+		self.whiteLabel.setGeometry(QtCore.QRect(0, 0, 50, 20))
+		self.whiteLabel.setPalette(colorPalette)
+		self.whiteLabel.setAutoFillBackground(True);
+
+		whitePointLayout.addWidget(whiteIcon)
+		whitePointLayout.addWidget(self.whiteLabel)
+
+		blackPointLayout = QtGui.QHBoxLayout()
+		
+		blackIcon = QtGui.QLabel()		
+		blackIcon.setPixmap(QtGui.QPixmap('black_small.png'))
+		blackIcon.setGeometry(QtCore.QRect(0, 0, 20, 20))
+
+		whiteIcon.setSizePolicy(policy)		
+		blackIcon.setSizePolicy(policy)		
+		#blackLabel = QtGui.QLabel('0')
+
+		self.blackLabel.setGeometry(QtCore.QRect(0, 0, 50, 20))
+		self.blackLabel.setPalette(colorPalette)
+		self.blackLabel.setAutoFillBackground(True);		
+
+		blackPointLayout.addWidget(blackIcon)
+		blackPointLayout.addWidget(self.blackLabel)
+
+		self.whiteLabel.setGeometry(QtCore.QRect(0, 0, 50, 20))
+		
+
+		pointsLayout = QtGui.QHBoxLayout()
+        
+		pointsLayout.setContentsMargins(100, 0, 100, 0)	
+		#pointsLayout.addWidget(whiteFrame)
+		#pointsLayout.addWidget(blackFrame)
+		pointsLayout.addLayout(whitePointLayout)
+		pointsLayout.addLayout(blackPointLayout)
+
 		chatLayout = QtGui.QVBoxLayout()
 
 		#enterBox = QtGui.QLineEdit()
@@ -135,6 +189,7 @@ class clientThread(threading.Thread):
 
 		mainLayout = QtGui.QVBoxLayout()
 		mainLayout.addLayout(grid)
+		mainLayout.addLayout(pointsLayout)
 		mainLayout.addLayout(chatLayout)
 		
 		self.convertBoard(board)
@@ -176,7 +231,10 @@ class clientThread(threading.Thread):
 					makeMove(board, getRivalTile(self.tile), x, y)
 					self.convertBoard(board)
 					scores = getScoreOfBoard(board)					
-					self.window.setWindowTitle('You: %s, Opponent: %s' % (scores[self.tile], scores[getRivalTile(self.tile)]))
+					self.blackLabel.setText(str(scores['O']))
+					self.whiteLabel.setText(str(scores['X']))
+
+					#self.window.setWindowTitle('You: %s, Opponent: %s' % (scores[self.tile], scores[getRivalTile(self.tile)]))
 					self.setEnabled(True)
 
 	def sendMessage(self, text):
@@ -192,7 +250,9 @@ class clientThread(threading.Thread):
 			self.convertBoard(board)			
 			scores = getScoreOfBoard(board)	
 			result = self.client.sendall(json.dumps({'x' : x, 'y' : y}, sort_keys=True, indent=4))
-			self.window.setWindowTitle('You: %s, Opponent: %s' % (scores[self.tile], scores[getRivalTile(self.tile)]))
+			#self.window.setWindowTitle('You: %s, Opponent: %s' % (scores[self.tile], scores[getRivalTile(self.tile)]))
+			self.blackLabel.setText(str(scores['O']))
+			self.whiteLabel.setText(str(scores['X']))
 			self.setEnabled(False)
 			
 	
