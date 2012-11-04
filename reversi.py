@@ -118,7 +118,7 @@ class clientThread(threading.Thread):
 			buttonGrid.append(new)
 		
 		colorPalette = QtGui.QPalette()
-		colorPalette.setColor(QtGui.QPalette.Background, QtGui.QColor(50, 68, 43, 0))
+		#colorPalette.setColor(QtGui.QPalette.Background, QtGui.QColor(50, 68, 43, 0))
 		
 		whitePointLayout = QtGui.QHBoxLayout()
 		#whitePointLayout.setSpacing(0)
@@ -134,9 +134,9 @@ class clientThread(threading.Thread):
 		policy.setVerticalStretch(0)
 		policy.setHeightForWidth(whiteIcon.sizePolicy().hasHeightForWidth())
 
-		self.whiteLabel.setGeometry(QtCore.QRect(0, 0, 50, 20))
-		self.whiteLabel.setPalette(colorPalette)
-		self.whiteLabel.setAutoFillBackground(True);
+		#self.whiteLabel.setGeometry(QtCore.QRect(0, 0, 50, 20))
+		#self.whiteLabel.setPalette(colorPalette)
+		#self.whiteLabel.setAutoFillBackground(True);
 
 		whitePointLayout.addWidget(whiteIcon)
 		whitePointLayout.addWidget(self.whiteLabel)
@@ -151,16 +151,15 @@ class clientThread(threading.Thread):
 		blackIcon.setSizePolicy(policy)		
 		#blackLabel = QtGui.QLabel('0')
 
-		self.blackLabel.setGeometry(QtCore.QRect(0, 0, 50, 20))
-		self.blackLabel.setPalette(colorPalette)
-		self.blackLabel.setAutoFillBackground(True);		
+		#self.blackLabel.setGeometry(QtCore.QRect(0, 0, 50, 20))
+		#self.blackLabel.setPalette(colorPalette)
+		#self.blackLabel.setAutoFillBackground(True);		
 
 		blackPointLayout.addWidget(blackIcon)
 		blackPointLayout.addWidget(self.blackLabel)
 
-		self.whiteLabel.setGeometry(QtCore.QRect(0, 0, 50, 20))
+		#self.whiteLabel.setGeometry(QtCore.QRect(0, 0, 50, 20))
 		
-
 		pointsLayout = QtGui.QHBoxLayout()
         
 		pointsLayout.setContentsMargins(100, 0, 100, 0)	
@@ -168,6 +167,9 @@ class clientThread(threading.Thread):
 		#pointsLayout.addWidget(blackFrame)
 		pointsLayout.addLayout(whitePointLayout)
 		pointsLayout.addLayout(blackPointLayout)
+
+		self.blackLabel.setAlignment(QtCore.Qt.AlignCenter)
+		self.whiteLabel.setAlignment(QtCore.Qt.AlignCenter)
 
 		chatLayout = QtGui.QVBoxLayout()
 
@@ -194,7 +196,7 @@ class clientThread(threading.Thread):
 		
 		self.convertBoard(board)
 		
-		w.setWindowTitle('Waiting...')	
+		w.setWindowTitle('Reversi')	
 		w.setLayout(mainLayout)
 		return w
 
